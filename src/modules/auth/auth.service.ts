@@ -10,6 +10,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { Role } from 'src/common/enums/role.enum';
 import { Repository } from 'typeorm';
 
+import { BotSendToChannel } from '../bot/bot.sendToChannel';
 import { User } from '../user/user.entity';
 
 import { GoogleTokenDto } from './dto/google-token.dto';
@@ -24,8 +25,94 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly botSendToChannel: BotSendToChannel,
   ) {
     this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
+
+  private async notifyNewUserRegistration(
+    user: User,
+    registrationMethod: 'email' | 'google',
+  ): Promise<void> {
+    const message =
+      registrationMethod === 'email'
+        ? this.buildEmailRegistrationMessage(user)
+        : this.buildGoogleRegistrationMessage(user);
+
+    try {
+      await this.botSendToChannel.sendToChannel(message);
+    } catch (error) {
+      console.error('Failed to send Telegram notification:', error);
+    }
+  }
+
+  private buildEmailRegistrationMessage(user: User): string {
+    return `
+🆕 New User Registered!
+━━━━━━━━━━━━━━━━━━━━
+📧 Email: ${user.email}
+👤 Display Name: ${user.displayName}
+🎭 Role: ${user.role}
+🏷️ Tags: ${user.tags.join(', ') || 'None'}
+🕐 Registered: ${new Date().toISOString()}
+    `.trim();
+  }
+
+  private buildGoogleRegistrationMessage(user: User): string {
+    return `
+🆕 New User via Google Auth!
+━━━━━━━━━━━━━━━━━━━━
+📧 Email: ${user.email}
+👤 Display Name: ${user.displayName}
+🎭 Role: ${user.role}
+🖼️ Avatar: ${user.avatarUrl || 'None'}
+🕐 Registered: ${new Date().toISOString()}
+    `.trim();
+  }
+
+  private mapUserToResponse(user: User) {
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      role: user.role,
+      tags: user.tags,
+      avatarUrl: user.avatarUrl,
+    };
+  }
+
+  private async createUser(userData: {
+    email: string;
+    password?: string;
+    displayName: string;
+    tags?: string[];
+    googleId?: string;
+    avatarUrl?: string;
+  }): Promise<User> {
+    const user = this.userRepository.create({
+      ...userData,
+      role: Role.USER,
+      tags: userData.tags || [],
+    });
+    return await this.userRepository.save(user);
+  }
+
+  private async updateUserWithGoogleData(
+    user: User,
+    googleData: {
+      googleId: string;
+      displayName: string;
+      avatarUrl: string;
+      email?: string;
+    },
+  ): Promise<User> {
+    user.googleId = googleData.googleId;
+    user.displayName = googleData.displayName;
+    user.avatarUrl = googleData.avatarUrl;
+    if (googleData.email) {
+      user.email = googleData.email;
+    }
+    return await this.userRepository.save(user);
   }
 
   async register(registerDto: RegisterDto) {
@@ -41,26 +128,19 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = this.userRepository.create({
+    const user = await this.createUser({
       email,
       password: hashedPassword,
       displayName,
-      tags: tags || [],
-      role: Role.USER,
+      tags,
     });
 
-    await this.userRepository.save(user);
+    await this.notifyNewUserRegistration(user, 'email');
 
     const token = this.generateToken(user);
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        role: user.role,
-        tags: user.tags,
-      },
+      user: this.mapUserToResponse(user),
       token,
     };
   }
@@ -85,14 +165,7 @@ export class AuthService {
     const token = this.generateToken(user);
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        role: user.role,
-        tags: user.tags,
-        avatarUrl: user.avatarUrl,
-      },
+      user: this.mapUserToResponse(user),
       token,
     };
   }
@@ -127,23 +200,23 @@ export class AuthService {
       });
 
       if (user) {
-        user.googleId = googleId;
-        user.displayName = displayName;
-        user.avatarUrl = avatarUrl;
-        await this.userRepository.save(user);
+        await this.updateUserWithGoogleData(user, {
+          googleId,
+          displayName,
+          avatarUrl,
+        });
       }
     }
 
     if (!user) {
-      user = this.userRepository.create({
+      user = await this.createUser({
         googleId,
         email,
         displayName,
         avatarUrl,
-        role: Role.USER,
-        tags: [],
       });
-      await this.userRepository.save(user);
+
+      await this.notifyNewUserRegistration(user, 'google');
     }
 
     return user;
@@ -153,63 +226,12 @@ export class AuthService {
     const { idToken } = googleTokenDto;
 
     try {
-      const ticket = await this.googleClient.verifyIdToken({
-        idToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-
-      const payload = ticket.getPayload();
-
-      if (!payload) {
-        throw new UnauthorizedException('Invalid Google token');
-      }
-
-      const googleId = payload.sub;
-      const email = payload.email;
-      const displayName = payload.name;
-      const avatarUrl = payload.picture;
-
-      let user = await this.userRepository.findOne({
-        where: { googleId },
-      });
-
-      if (!user && email) {
-        user = await this.userRepository.findOne({
-          where: { email },
-        });
-
-        if (user) {
-          user.googleId = googleId;
-          user.displayName = displayName;
-          user.avatarUrl = avatarUrl;
-          user.email = email;
-          await this.userRepository.save(user);
-        }
-      }
-
-      if (!user) {
-        user = this.userRepository.create({
-          googleId,
-          email,
-          displayName,
-          avatarUrl,
-          role: Role.USER,
-          tags: [],
-        });
-        await this.userRepository.save(user);
-      }
-
+      const payload = await this.verifyGoogleToken(idToken);
+      const user = await this.findOrCreateGoogleUserFromPayload(payload);
       const token = this.generateToken(user);
 
       return {
-        user: {
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName,
-          role: user.role,
-          tags: user.tags,
-          avatarUrl: user.avatarUrl,
-        },
+        user: this.mapUserToResponse(user),
         token,
       };
     } catch (error) {
@@ -217,6 +239,61 @@ export class AuthService {
         'Failed to verify Google token: ' + error.message,
       );
     }
+  }
+
+  private async verifyGoogleToken(idToken: string) {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid Google token');
+    }
+
+    return payload;
+  }
+
+  private async findOrCreateGoogleUserFromPayload(payload: any): Promise<User> {
+    const googleId = payload.sub;
+    const email = payload.email;
+    const displayName = payload.name;
+    const avatarUrl = payload.picture;
+
+    let user = await this.userRepository.findOne({
+      where: { googleId },
+    });
+
+    if (!user && email) {
+      user = await this.userRepository.findOne({
+        where: { email },
+      });
+
+      if (user) {
+        await this.updateUserWithGoogleData(user, {
+          googleId,
+          displayName,
+          avatarUrl,
+          email,
+        });
+        return user;
+      }
+    }
+
+    if (!user) {
+      user = await this.createUser({
+        googleId,
+        email,
+        displayName,
+        avatarUrl,
+      });
+
+      await this.notifyNewUserRegistration(user, 'google');
+    }
+
+    return user;
   }
 
   generateToken(user: User) {

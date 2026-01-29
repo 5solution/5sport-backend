@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi } from 'vitest';
 
 import { BotController } from './bot.controller';
 import { BotSendToChannel } from './bot.sendToChannel';
 import { BotService } from './bot.service';
-import { vi } from 'vitest';
 
 const mockBotService = {
   sendToTargetGroup: vi.fn(),

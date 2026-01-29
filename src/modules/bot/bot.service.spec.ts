@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { vi } from 'vitest';
 
 import { BotService } from './bot.service';
 import { BOT_NAME } from './constant';
-import { vi } from 'vitest';
 
 const mockTelegraf = {
   telegram: {
