@@ -33,4 +33,3 @@ export const isSyncing = async (redis: Redis, name: string) => {
   const key = `${RedisKey.flag}:${name}`;
   return await redis.get(key);
 };
-

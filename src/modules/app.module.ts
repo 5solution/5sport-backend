@@ -3,9 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RedisModule } from '@nestjs-modules/ioredis';
-
-import dataSource from 'src/libs/typeorm.config';
 import { env } from 'src/config';
+import dataSource from 'src/libs/typeorm.config';
 
 @Module({
   imports: [
