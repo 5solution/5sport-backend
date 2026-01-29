@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { User } from './user.entity';
 import { UserService } from './user.service';
+import { Role, Roles } from 'src/common';
 
 @Controller('users')
 @ApiTags('Users')
@@ -15,6 +16,7 @@ export class UsersController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get paginated list of users' })
   async getUsers(@Query() query: PaginationQueryDto) {
