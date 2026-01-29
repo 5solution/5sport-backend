@@ -1,4 +1,4 @@
-export const BOT_NAME = 'Prediction Test Bot';
+export const BOT_NAME = '5Solution Bot';
 
 export const TARGET_GROUP_ID = -1003562570184;
 export const TARGET_TOPIC_ID = 17;
