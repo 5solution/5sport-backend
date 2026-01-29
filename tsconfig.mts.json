@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "ES2022"
+  },
+  "include": ["**/*.mts", "vitest.config.e2e.mts", "vitest.config.unit.mts"]
+}

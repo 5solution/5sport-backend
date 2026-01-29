@@ -120,6 +120,33 @@ export class AuthController {
     res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/success?token=${token}`);
   }
 
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Logout user',
+    description: 'Logout the authenticated user and invalidate the session',
+  })
+  @ApiOkResponse({
+    description: 'User successfully logged out',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Logged out successfully' },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing JWT token',
+    type: ErrorResponseDto,
+  })
+  logout(@CurrentUser() _user: User) {
+    // For JWT-based auth, the actual token invalidation happens client-side
+    // This endpoint can be used for logging/auditing purposes
+    // Future: implement token blacklisting if needed
+    return { message: 'Logged out successfully' };
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
