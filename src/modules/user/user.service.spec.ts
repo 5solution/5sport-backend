@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Repository } from 'typeorm';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Role } from '../../common/enums/role.enum';
 
@@ -10,7 +10,7 @@ import { UserService } from './user.service';
 
 describe('UserService', () => {
   let service: UserService;
-  let userRepository: Repository<User>;
+  let _userRepository: Repository<User>;
 
   const mockUsers: Partial<User>[] = [
     {
@@ -66,7 +66,7 @@ describe('UserService', () => {
     }).compile();
 
     service = module.get<UserService>(UserService);
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User));
+    _userRepository = module.get<Repository<User>>(getRepositoryToken(User));
   });
 
   afterEach(() => {
@@ -104,10 +104,7 @@ describe('UserService', () => {
     });
 
     it('should return paginated users with custom page and limit', async () => {
-      mockUserRepository.findAndCount.mockResolvedValue([
-        [mockUsers[1]],
-        3,
-      ]);
+      mockUserRepository.findAndCount.mockResolvedValue([[mockUsers[1]], 3]);
 
       const result = await service.findAllPaginated({ page: 2, limit: 1 });
 
@@ -148,10 +145,7 @@ describe('UserService', () => {
     });
 
     it('should handle last page correctly', async () => {
-      mockUserRepository.findAndCount.mockResolvedValue([
-        [mockUsers[2]],
-        3,
-      ]);
+      mockUserRepository.findAndCount.mockResolvedValue([[mockUsers[2]], 3]);
 
       const result = await service.findAllPaginated({ page: 3, limit: 1 });
 
@@ -223,13 +217,13 @@ describe('UserService', () => {
     });
 
     it('should exclude password from returned user', async () => {
-      const userWithPassword = {
+      const _userWithPassword = {
         ...mockUsers[0],
         password: 'hashedPassword123',
       };
       mockUserRepository.findOne.mockResolvedValue(mockUsers[0]);
 
-      const result = await service.findById('user-uuid-1');
+      const _result = await service.findById('user-uuid-1');
 
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'user-uuid-1' },

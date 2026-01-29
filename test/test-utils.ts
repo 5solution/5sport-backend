@@ -3,12 +3,11 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as request from 'supertest';
-
 import { Role } from 'src/common/enums/role.enum';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { User } from 'src/modules/user/user.entity';
 import { UserModule } from 'src/modules/user/user.module';
+import * as request from 'supertest';
 
 export interface TestContext {
   app: INestApplication;
@@ -59,11 +58,13 @@ export async function createUserWithRole(
   role: Role,
 ): Promise<string> {
   // Register user
-  await request(app.getHttpServer()).post('/auth/register').send({
-    email,
-    password,
-    displayName: `${role} User`,
-  });
+  await request(app.getHttpServer())
+    .post('/auth/register')
+    .send({
+      email,
+      password,
+      displayName: `${role} User`,
+    });
 
   // Login to get token
   const response = await request(app.getHttpServer())

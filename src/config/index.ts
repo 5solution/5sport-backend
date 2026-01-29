@@ -11,7 +11,7 @@ const envVarsSchema = Joi.object()
     PORT: Joi.number().default(3000),
     POSTGRES_URL: Joi.string().required(),
     REDIS_URL: Joi.string().required(),
-    TELE_BOT_TOKEN: Joi.string().required(),
+    TELEGRAM_BOT_TOKEN: Joi.string().required(),
   })
   .unknown();
 
@@ -32,5 +32,5 @@ export const env = {
     testDbName: 'test',
   },
   redisUrl: envVars.REDIS_URL,
-  telegramBotToken: envVars.TELE_BOT_TOKEN,
+  telegramBotToken: envVars.TELEGRAM_BOT_TOKEN,
 };

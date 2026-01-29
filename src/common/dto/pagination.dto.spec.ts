@@ -1,5 +1,5 @@
-import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
 import { describe, it, expect } from 'vitest';
 
 import {

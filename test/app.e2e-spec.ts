@@ -2,11 +2,10 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as request from 'supertest';
-
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { User } from 'src/modules/user/user.entity';
 import { UserModule } from 'src/modules/user/user.module';
+import * as request from 'supertest';
 
 describe('App (e2e)', () => {
   let app: INestApplication;

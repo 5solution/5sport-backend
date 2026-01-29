@@ -3,13 +3,12 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
-import * as request from 'supertest';
-import { Repository } from 'typeorm';
-
 import { Role } from 'src/common/enums/role.enum';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { User } from 'src/modules/user/user.entity';
 import { UserModule } from 'src/modules/user/user.module';
+import * as request from 'supertest';
+import { Repository } from 'typeorm';
 
 describe('Users (e2e)', () => {
   let app: INestApplication;
@@ -92,7 +91,7 @@ describe('Users (e2e)', () => {
 
     // Create test users
     for (const userData of testUsers) {
-      const response = await request(app.getHttpServer())
+      const _response = await request(app.getHttpServer())
         .post('/auth/register')
         .send(userData);
 

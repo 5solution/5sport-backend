@@ -111,7 +111,9 @@ describe('AuthController', () => {
         idToken: 'valid-google-id-token',
       };
 
-      mockAuthService.authenticateWithGoogle.mockResolvedValue(mockAuthResponse);
+      mockAuthService.authenticateWithGoogle.mockResolvedValue(
+        mockAuthResponse,
+      );
 
       const result = await controller.googleAuthenticate(googleTokenDto);
 

@@ -3,12 +3,11 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as request from 'supertest';
-
 import { Role } from 'src/common/enums/role.enum';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { User } from 'src/modules/user/user.entity';
 import { UserModule } from 'src/modules/user/user.module';
+import * as request from 'supertest';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -199,7 +198,7 @@ describe('Auth (e2e)', () => {
 
   describe('/auth/admin/users (GET) - RBAC', () => {
     let userToken: string;
-    let adminToken: string;
+    let _adminToken: string;
 
     beforeAll(async () => {
       // Login as regular user
@@ -235,7 +234,7 @@ describe('Auth (e2e)', () => {
 
   describe('/auth/organizer/dashboard (GET) - RBAC', () => {
     let userToken: string;
-    let organizerToken: string;
+    let _organizerToken: string;
 
     beforeAll(async () => {
       // Login as regular user

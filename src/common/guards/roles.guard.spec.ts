@@ -67,7 +67,9 @@ describe('RolesGuard', () => {
       const context = createMockExecutionContext(undefined);
 
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-      expect(() => guard.canActivate(context)).toThrow('User not authenticated');
+      expect(() => guard.canActivate(context)).toThrow(
+        'User not authenticated',
+      );
     });
 
     it('should throw ForbiddenException when user does not have required role', () => {

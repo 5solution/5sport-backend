@@ -1,5 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Role, Roles } from 'src/common';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
@@ -7,7 +8,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { User } from './user.entity';
 import { UserService } from './user.service';
-import { Role, Roles } from 'src/common';
 
 @Controller('users')
 @ApiTags('Users')

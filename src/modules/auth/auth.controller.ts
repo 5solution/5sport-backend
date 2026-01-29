@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -47,7 +55,8 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({
-    description: 'Validation error - invalid email format or password too short',
+    description:
+      'Validation error - invalid email format or password too short',
     type: ErrorResponseDto,
   })
   @ApiConflictResponse({
@@ -102,7 +111,8 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({
     summary: 'Initiate Google OAuth flow',
-    description: 'Redirect to Google OAuth consent page (traditional OAuth flow)',
+    description:
+      'Redirect to Google OAuth consent page (traditional OAuth flow)',
   })
   async googleAuth() {
     // Guard redirects to Google
@@ -117,7 +127,9 @@ export class AuthController {
   async googleAuthCallback(@Req() req: any, @Res() res: Response) {
     const user = req.user;
     const token = this.authService.generateToken(user);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/success?token=${token}`);
+    res.redirect(
+      `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/success?token=${token}`,
+    );
   }
 
   @Post('logout')
