@@ -5,7 +5,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { Role } from '../../common/enums/role.enum';
-import { BotSendToChannel } from '../bot/bot.sendToChannel';
+import { BotService } from '../bot/bot.service';
 import { User } from '../user/user.entity';
 
 import { AuthService } from './auth.service';
@@ -62,8 +62,8 @@ describe('AuthService', () => {
     sign: vi.fn().mockReturnValue('mock-jwt-token'),
   };
 
-  const mockBotSendToChannel = {
-    sendToChannel: vi.fn().mockResolvedValue(undefined),
+  const mockBotService = {
+    sendToTargetGroup: vi.fn().mockResolvedValue(undefined),
   };
 
   beforeEach(async () => {
@@ -81,8 +81,8 @@ describe('AuthService', () => {
           useValue: mockJwtService,
         },
         {
-          provide: BotSendToChannel,
-          useValue: mockBotSendToChannel,
+          provide: BotService,
+          useValue: mockBotService,
         },
       ],
     }).compile();

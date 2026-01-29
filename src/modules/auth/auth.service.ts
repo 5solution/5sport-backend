@@ -10,7 +10,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { Role } from 'src/common/enums/role.enum';
 import { Repository } from 'typeorm';
 
-import { BotSendToChannel } from '../bot/bot.sendToChannel';
+import { BotService } from '../bot/bot.service';
 import { User } from '../user/user.entity';
 
 import { GoogleTokenDto } from './dto/google-token.dto';
@@ -25,7 +25,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly botSendToChannel: BotSendToChannel,
+    private readonly botService: BotService,
   ) {
     this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
@@ -40,7 +40,7 @@ export class AuthService {
         : this.buildGoogleRegistrationMessage(user);
 
     try {
-      await this.botSendToChannel.sendToChannel(message);
+      await this.botService.sendToTargetGroup(message);
     } catch (error) {
       console.error('Failed to send Telegram notification:', error);
     }
