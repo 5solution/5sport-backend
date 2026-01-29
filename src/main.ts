@@ -1,4 +1,6 @@
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { join } from 'path';
+
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -49,22 +51,26 @@ async function bootstrap() {
   app.useLogger(new Logger('APP'));
   const logger = new Logger('APP');
 
-  app.setGlobalPrefix('api');
+  // Serve static files from public directory
+  app.useStaticAssets(join(__dirname, '..', 'public'), {
+    prefix: '/',
+  });
+
   setMiddleware(app);
 
   if (process.env.NODE_ENV !== 'production') {
     const swaggerConfig = new DocumentBuilder()
-      .setTitle('Givdotfun service API')
-      .setDescription('API documentation for Givdotfun service')
+      .setTitle('5Sport API')
+      .setDescription(
+        'API documentation for 5Sport authentication and services',
+      )
       .setVersion('1.0')
       .addBearerAuth(
         {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          name: 'JWT',
           description: 'Enter JWT token',
-          in: 'header',
         },
         'JWT-auth',
       )
