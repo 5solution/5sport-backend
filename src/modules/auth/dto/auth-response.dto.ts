@@ -1,4 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+import { Role } from '../../../common/enums/role.enum';
 
 export class UserResponseDto {
   @ApiProperty({
@@ -8,25 +10,36 @@ export class UserResponseDto {
   id: string;
 
   @ApiProperty({
-    description: 'Username',
-    example: 'johndoe',
-    required: false,
-  })
-  username?: string;
-
-  @ApiProperty({
-    description: 'Email address',
+    description: 'User email address',
     example: 'user@example.com',
-    required: false,
   })
-  email?: string;
+  email: string;
 
-  @ApiProperty({
-    description: 'Display name',
+  @ApiPropertyOptional({
+    description: 'User display name',
     example: 'John Doe',
-    required: false,
   })
   displayName?: string;
+
+  @ApiProperty({
+    description: 'User role',
+    enum: Role,
+    example: Role.USER,
+  })
+  role: Role;
+
+  @ApiProperty({
+    description: 'User tags',
+    example: ['sports', 'fitness'],
+    type: [String],
+  })
+  tags: string[];
+
+  @ApiPropertyOptional({
+    description: 'User avatar URL',
+    example: 'https://example.com/avatar.jpg',
+  })
+  avatarUrl?: string;
 }
 
 export class AuthResponseDto {
@@ -41,4 +54,25 @@ export class AuthResponseDto {
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
   token: string;
+}
+
+export class ErrorResponseDto {
+  @ApiProperty({
+    description: 'HTTP status code',
+    example: 400,
+  })
+  statusCode: number;
+
+  @ApiProperty({
+    description: 'Error message',
+    example: 'Invalid credentials',
+  })
+  message: string;
+
+  @ApiPropertyOptional({
+    description: 'Detailed error information',
+    example: ['email must be an email'],
+    type: [String],
+  })
+  errors?: string[];
 }

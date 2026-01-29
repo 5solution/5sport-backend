@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
+import { Role } from 'src/common/enums/role.enum';
 import { Repository } from 'typeorm';
 
 import { User } from '../user/user.entity';
@@ -28,75 +29,77 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const { username, password } = registerDto;
+    const { email, password, displayName, tags } = registerDto;
 
-    // Check if user already exists
     const existingUser = await this.userRepository.findOne({
-      where: { username },
+      where: { email },
     });
 
     if (existingUser) {
-      throw new ConflictException('Username already exists');
+      throw new ConflictException('Email already registered');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = this.userRepository.create({
-      username,
+      email,
       password: hashedPassword,
+      displayName,
+      tags: tags || [],
+      role: Role.USER,
     });
 
     await this.userRepository.save(user);
 
-    // Generate token
     const token = this.generateToken(user);
 
     return {
       user: {
         id: user.id,
-        username: user.username,
+        email: user.email,
+        displayName: user.displayName,
+        role: user.role,
+        tags: user.tags,
       },
       token,
     };
   }
 
   async login(loginDto: LoginDto) {
-    const { username, password } = loginDto;
+    const { email, password } = loginDto;
 
-    // Find user
     const user = await this.userRepository.findOne({
-      where: { username },
+      where: { email },
     });
 
     if (!user || !user.password) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate token
     const token = this.generateToken(user);
 
     return {
       user: {
         id: user.id,
-        username: user.username,
         email: user.email,
+        displayName: user.displayName,
+        role: user.role,
+        tags: user.tags,
+        avatarUrl: user.avatarUrl,
       },
       token,
     };
   }
 
-  async validateUser(username: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userRepository.findOne({
-      where: { username },
+      where: { email },
     });
 
     if (user && user.password) {
@@ -114,19 +117,16 @@ export class AuthService {
     const email = emails?.[0]?.value;
     const avatarUrl = photos?.[0]?.value;
 
-    // Try to find existing user by googleId
     let user = await this.userRepository.findOne({
       where: { googleId },
     });
 
     if (!user && email) {
-      // Try to find by email
       user = await this.userRepository.findOne({
         where: { email },
       });
 
       if (user) {
-        // Update existing user with Google ID
         user.googleId = googleId;
         user.displayName = displayName;
         user.avatarUrl = avatarUrl;
@@ -135,12 +135,13 @@ export class AuthService {
     }
 
     if (!user) {
-      // Create new user
       user = this.userRepository.create({
         googleId,
         email,
         displayName,
         avatarUrl,
+        role: Role.USER,
+        tags: [],
       });
       await this.userRepository.save(user);
     }
@@ -152,7 +153,6 @@ export class AuthService {
     const { idToken } = googleTokenDto;
 
     try {
-      // Verify the Google ID token
       const ticket = await this.googleClient.verifyIdToken({
         idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -169,19 +169,16 @@ export class AuthService {
       const displayName = payload.name;
       const avatarUrl = payload.picture;
 
-      // Try to find existing user by googleId
       let user = await this.userRepository.findOne({
         where: { googleId },
       });
 
       if (!user && email) {
-        // Try to find by email
         user = await this.userRepository.findOne({
           where: { email },
         });
 
         if (user) {
-          // Update existing user with Google ID
           user.googleId = googleId;
           user.displayName = displayName;
           user.avatarUrl = avatarUrl;
@@ -191,17 +188,17 @@ export class AuthService {
       }
 
       if (!user) {
-        // Create new user
         user = this.userRepository.create({
           googleId,
           email,
           displayName,
           avatarUrl,
+          role: Role.USER,
+          tags: [],
         });
         await this.userRepository.save(user);
       }
 
-      // Generate JWT token
       const token = this.generateToken(user);
 
       return {
@@ -209,7 +206,9 @@ export class AuthService {
           id: user.id,
           email: user.email,
           displayName: user.displayName,
-          username: user.username,
+          role: user.role,
+          tags: user.tags,
+          avatarUrl: user.avatarUrl,
         },
         token,
       };
@@ -223,8 +222,8 @@ export class AuthService {
   generateToken(user: User) {
     const payload = {
       sub: user.id,
-      username: user.username,
       email: user.email,
+      role: user.role,
     };
 
     return this.jwtService.sign(payload);

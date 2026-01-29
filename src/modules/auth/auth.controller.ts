@@ -1,22 +1,30 @@
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
   ApiOperation,
-  ApiResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Response } from 'express';
+
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '../../common/enums/role.enum';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { User } from '../user/user.entity';
 
 import { AuthService } from './auth.service';
-import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto';
+import {
+  AuthResponseDto,
+  ErrorResponseDto,
+  UserResponseDto,
+} from './dto/auth-response.dto';
 import { GoogleTokenDto } from './dto/google-token.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -29,44 +37,62 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user with username and password' })
-  @ApiResponse({
-    status: 201,
-    description: 'User successfully registered and JWT token generated',
+  @ApiOperation({
+    summary: 'Register a new user',
+    description: 'Create a new user account with email and password',
+  })
+  @ApiBody({ type: RegisterDto })
+  @ApiCreatedResponse({
+    description: 'User successfully registered',
     type: AuthResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input or username already exists',
+  @ApiBadRequestResponse({
+    description: 'Validation error - invalid email format or password too short',
+    type: ErrorResponseDto,
+  })
+  @ApiConflictResponse({
+    description: 'Email already registered',
+    type: ErrorResponseDto,
   })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login with username and password' })
-  @ApiResponse({
-    status: 200,
-    description: 'User successfully authenticated and JWT token generated',
+  @ApiOperation({
+    summary: 'Login with email and password',
+    description: 'Authenticate user and return JWT token',
+  })
+  @ApiBody({ type: LoginDto })
+  @ApiOkResponse({
+    description: 'User successfully authenticated',
     type: AuthResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiBadRequestResponse({
+    description: 'Validation error - invalid email format',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid credentials',
+    type: ErrorResponseDto,
+  })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
   @Post('google/authenticate')
   @ApiOperation({
-    summary: 'Authenticate with Google ID token and get backend JWT',
+    summary: 'Authenticate with Google',
+    description: 'Verify Google ID token and return JWT token',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Google token verified and backend JWT token generated',
+  @ApiBody({ type: GoogleTokenDto })
+  @ApiOkResponse({
+    description: 'Google token verified and JWT issued',
     type: AuthResponseDto,
   })
-  @ApiResponse({
-    status: 401,
+  @ApiUnauthorizedResponse({
     description: 'Invalid or expired Google ID token',
+    type: ErrorResponseDto,
   })
   async googleAuthenticate(@Body() googleTokenDto: GoogleTokenDto) {
     return this.authService.authenticateWithGoogle(googleTokenDto);
@@ -74,10 +100,9 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  @ApiOperation({ summary: 'Initiate Google OAuth flow (traditional method)' })
-  @ApiResponse({
-    status: 302,
-    description: 'Redirects to Google OAuth consent page',
+  @ApiOperation({
+    summary: 'Initiate Google OAuth flow',
+    description: 'Redirect to Google OAuth consent page (traditional OAuth flow)',
   })
   async googleAuth() {
     // Guard redirects to Google
@@ -86,34 +111,89 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({
-    summary: 'Google OAuth callback endpoint (traditional method)',
-  })
-  @ApiResponse({
-    status: 302,
-    description: 'Redirects to frontend with JWT token',
+    summary: 'Google OAuth callback',
+    description: 'Handle Google OAuth callback and redirect with JWT token',
   })
   async googleAuthCallback(@Req() req: any, @Res() res: Response) {
     const user = req.user;
     const token = this.authService.generateToken(user);
-
-    // Redirect to frontend with token
-    res.redirect(`http://localhost:3000/auth/success?token=${token}`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/success?token=${token}`);
   }
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current authenticated user profile' })
-  @ApiResponse({
-    status: 200,
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Get current user profile',
+    description: 'Return the authenticated user profile from JWT token',
+  })
+  @ApiOkResponse({
     description: 'User profile retrieved successfully',
     type: UserResponseDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - invalid or missing JWT token',
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing JWT token',
+    type: ErrorResponseDto,
   })
-  getProfile(@Req() req: Request) {
-    return req.user;
+  getProfile(@CurrentUser() user: User) {
+    return user;
+  }
+
+  @Get('admin/users')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Admin only endpoint example',
+    description: 'This endpoint is only accessible by users with admin role',
+  })
+  @ApiOkResponse({
+    description: 'Admin access granted',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Admin access granted' },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing JWT token',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'User does not have admin role',
+    type: ErrorResponseDto,
+  })
+  adminOnly() {
+    return { message: 'Admin access granted' };
+  }
+
+  @Get('organizer/dashboard')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ORGANIZER, Role.ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Organizer dashboard endpoint',
+    description: 'Accessible by organizers and admins',
+  })
+  @ApiOkResponse({
+    description: 'Organizer access granted',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Organizer access granted' },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing JWT token',
+    type: ErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'User does not have organizer or admin role',
+    type: ErrorResponseDto,
+  })
+  organizerDashboard() {
+    return { message: 'Organizer access granted' };
   }
 }
