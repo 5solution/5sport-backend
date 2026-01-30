@@ -20,14 +20,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: latest
+      - name: Docker sanity
+        run: |
+          echo "Runner: $(uname -a)"
+          docker --version || true
+          ls -la
       - name: set env
         run: |
           SHORT_COMMIT_HASH="${FULL_COMMIT_HASH:0:8}"
@@ -40,10 +37,6 @@ jobs:
           echo $FULL_COMMIT_HASH
           echo $SHORT_COMMIT_HASH
           echo $IMAGE_NAME
-      - name: install deps & build (optional local check)
-        run: |
-          pnpm install --frozen-lockfile || pnpm install
-          pnpm build || echo "warn: local build failed, continuing to rely on Dockerfile build"
       - name: docker login
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
