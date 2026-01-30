@@ -1,0 +1,70 @@
+name: build push deploy dev
+
+on:
+  push:
+    branches:
+      - dev
+      - cicd
+  workflow_dispatch:
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  BRANCH_NAME: "${{ github.ref_name }}"
+  FULL_COMMIT_HASH: "${{ github.sha }}"
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+jobs:
+  # This pushes the image to GitHub Packages.
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: set env
+        run: |
+          SHORT_COMMIT_HASH="${FULL_COMMIT_HASH:0:8}"
+          echo "SHORT_COMMIT_HASH=$SHORT_COMMIT_HASH" >> $GITHUB_ENV
+          echo "FULL_COMMIT_HASH=$FULL_COMMIT_HASH" >> $GITHUB_ENV
+      - name: print env
+        run: |
+          echo $REPO_NAME
+          echo $BRANCH_NAME
+          echo $FULL_COMMIT_HASH
+          echo $SHORT_COMMIT_HASH
+          echo $IMAGE_NAME
+      - name: install deps & build (optional local check)
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile || pnpm install
+          pnpm build || echo "warn: local build failed, continuing to rely on Dockerfile build"
+      - name: docker login
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: build
+        run: |
+          docker pull $IMAGE_NAME:latest || echo "warn: image is not found"
+          docker build . --tag $IMAGE_NAME:$BRANCH_NAME --tag $IMAGE_NAME:$BRANCH_NAME-$FULL_COMMIT_HASH --tag $IMAGE_NAME:$BRANCH_NAME-$SHORT_COMMIT_HASH --tag $IMAGE_NAME:latest --label "runnumber=${GITHUB_RUN_ID}"
+      - name: docker image ls
+        run: |
+          docker image ls
+      - name: push
+        run: |
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:$BRANCH_NAME
+          docker push $IMAGE_NAME:$BRANCH_NAME-$FULL_COMMIT_HASH
+          docker push $IMAGE_NAME:$BRANCH_NAME-$SHORT_COMMIT_HASH
+      - name: deploy
+        run: |
+          echo "${{ secrets.CI_PRIVATE_KEY }}" > ./id_rsa && chmod 600 ./id_rsa
+          ssh -p 6060 -oStrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.IP_SEVER }} "set -euxo pipefail; echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u LongDao-fivebib --password-stdin; /usr/local/bin/5sport-be-deploy.sh $BRANCH_NAME-$FULL_COMMIT_HASH"
+      - name: git tag
+        run: |
+          TAG_NAME="dev-server-all"
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git tag -f $TAG_NAME
+          git push -f origin $TAG_NAME
