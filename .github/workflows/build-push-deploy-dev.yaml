@@ -24,6 +24,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
       - name: set env
         run: |
           SHORT_COMMIT_HASH="${FULL_COMMIT_HASH:0:8}"
@@ -38,7 +42,6 @@ jobs:
           echo $IMAGE_NAME
       - name: install deps & build (optional local check)
         run: |
-          npm install -g pnpm
           pnpm install --frozen-lockfile || pnpm install
           pnpm build || echo "warn: local build failed, continuing to rely on Dockerfile build"
       - name: docker login
