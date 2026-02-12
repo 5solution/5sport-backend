@@ -96,7 +96,12 @@ async function bootstrap() {
   await app.startAllMicroservices();
 
   await app.listen(env.port, () =>
-    logger.warn(`> Listening App on port ${env.port}`),
+    logger.warn(
+      `> Listening App on port ${env.port} 
+app running on http://localhost:${env.port}
+Swagger docs available at http://localhost:${env.port}/swagger
+      `,
+    ),
   );
 }
 

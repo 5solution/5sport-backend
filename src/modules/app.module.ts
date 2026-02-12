@@ -9,6 +9,7 @@ import dataSource from 'src/libs/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
 import { UserModule } from './user/user.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserModule } from './user/user.module';
     UserModule,
     AuthModule,
     BotModule,
+    EventModule,
   ],
 })
 export class AppModule {}
