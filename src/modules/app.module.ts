@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
 import { UserModule } from './user/user.module';
 import { EventModule } from './event/event.module';
+import { ProvinceModule } from './province/province.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { EventModule } from './event/event.module';
     AuthModule,
     BotModule,
     EventModule,
+    ProvinceModule,
   ],
 })
 export class AppModule {}
