@@ -1,0 +1,118 @@
+import { MigrationInterface, QueryRunner } from "typeorm";
+
+export class Migrations1771090453571 implements MigrationInterface {
+    name = 'Migrations1771090453571'
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`CREATE TYPE "public"."athletes_sport_type_enum" AS ENUM('PICKLEBALL', 'BADMINTON')`);
+        await queryRunner.query(`CREATE TABLE "athletes" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "name" character varying(256) NOT NULL, "sport_type" "public"."athletes_sport_type_enum" NOT NULL, "date_of_birth" date, "gender" character varying(20), "bio" text, "profile_image_url" text, "phone_number" character varying(20), "city" character varying(256), "country" character varying(256), "current_rating" numeric(5,2) NOT NULL DEFAULT '0', "peak_rating" numeric(5,2) NOT NULL DEFAULT '0', "rating_source" character varying(50), "total_events" integer NOT NULL DEFAULT '0', "total_matches" integer NOT NULL DEFAULT '0', "wins" integer NOT NULL DEFAULT '0', "losses" integer NOT NULL DEFAULT '0', "win_rate" numeric(5,2) NOT NULL DEFAULT '0', "achievements" text, "is_verified" boolean NOT NULL DEFAULT false, "is_active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_3b92d2bd187b2b2d27d4c47f1c4" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_cec24cd7ba9d1a0730443b93ce" ON "athletes" ("user_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_191703491f634eedd491deaa6b" ON "athletes" ("sport_type") `);
+        await queryRunner.query(`CREATE INDEX "IDX_86d25d1064e6b48ebe52e39a46" ON "athletes" ("current_rating") `);
+        await queryRunner.query(`CREATE INDEX "IDX_93d34a15a24eaa47c8a850699a" ON "athletes" ("is_active") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_96abed954edf63430d093cefbc" ON "athletes" ("user_id", "sport_type") `);
+        await queryRunner.query(`CREATE TABLE "leaderboard_entries" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "leaderboard_id" uuid NOT NULL, "athlete_id" uuid NOT NULL, "rank" integer NOT NULL, "previous_rank" integer, "score" numeric(10,2) NOT NULL, "matches_played" integer NOT NULL DEFAULT '0', "wins" integer NOT NULL DEFAULT '0', "losses" integer NOT NULL DEFAULT '0', "win_rate" numeric(5,2) NOT NULL DEFAULT '0', "metadata" jsonb, CONSTRAINT "PK_a3187f7d37819756a5519336665" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_5608daf78af66752b196bc49d4" ON "leaderboard_entries" ("leaderboard_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_50d2441d38d001c256920559f1" ON "leaderboard_entries" ("athlete_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_5538159e5c1b4a7d53b7cb5bf9" ON "leaderboard_entries" ("rank") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_3b694666387362611b511ce4e8" ON "leaderboard_entries" ("leaderboard_id", "athlete_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_ac02c10cd91dfddf89ecf65914" ON "leaderboard_entries" ("leaderboard_id", "rank") `);
+        await queryRunner.query(`CREATE TYPE "public"."leaderboards_type_enum" AS ENUM('OVERALL', 'EVENT', 'MONTHLY', 'YEARLY')`);
+        await queryRunner.query(`CREATE TYPE "public"."leaderboards_sport_type_enum" AS ENUM('PICKLEBALL', 'BADMINTON')`);
+        await queryRunner.query(`CREATE TABLE "leaderboards" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying(256) NOT NULL, "type" "public"."leaderboards_type_enum" NOT NULL, "sport_type" "public"."leaderboards_sport_type_enum" NOT NULL, "period" date, "event_id" character varying, "start_date" date NOT NULL, "end_date" date, "is_active" boolean NOT NULL DEFAULT true, "description" text, CONSTRAINT "PK_190f95e31621935228328d6c20a" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_66bbd1c8e74d9d609f226f869e" ON "leaderboards" ("type") `);
+        await queryRunner.query(`CREATE INDEX "IDX_81e8a2b8994dd6b83d016d2ff1" ON "leaderboards" ("sport_type") `);
+        await queryRunner.query(`CREATE INDEX "IDX_366354b67712a986663bdeb383" ON "leaderboards" ("event_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_e87cb135cd85f53e57c36bdfc2" ON "leaderboards" ("is_active") `);
+        await queryRunner.query(`CREATE INDEX "IDX_9facf49baa7f020b4231ef3cca" ON "leaderboards" ("sport_type", "type", "period") `);
+        await queryRunner.query(`CREATE TABLE "match_scores" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "match_id" uuid NOT NULL, "set_number" integer NOT NULL, "team1_points" integer NOT NULL, "team2_points" integer NOT NULL, "winner_team" integer, "details" jsonb, CONSTRAINT "PK_003d41d32629ae9faf61756c30c" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_28dc8ea45e3e9e898ddf8c8dda" ON "match_scores" ("match_id") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_2ef367261b0602f40969abe532" ON "match_scores" ("match_id", "set_number") `);
+        await queryRunner.query(`CREATE TYPE "public"."matches_status_enum" AS ENUM('SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')`);
+        await queryRunner.query(`CREATE TABLE "matches" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "session_id" uuid NOT NULL, "name" character varying(256) NOT NULL, "match_number" integer, "round" character varying(50), "court_number" integer, "scheduled_time" TIMESTAMP NOT NULL, "start_time" TIMESTAMP, "end_time" TIMESTAMP, "status" "public"."matches_status_enum" NOT NULL DEFAULT 'SCHEDULED', "team1_player1_id" character varying, "team1_player2_id" character varying, "team2_player1_id" character varying, "team2_player2_id" character varying, "team1_name" character varying(256), "team2_name" character varying(256), "team1_score" jsonb, "team2_score" jsonb, "winner_team" integer, "notes" text, "is_bye" boolean NOT NULL DEFAULT false, CONSTRAINT "PK_8a22c7b2e0828988d51256117f4" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_bd03125435af95f8aaba5a672b" ON "matches" ("session_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_e7b547e6f36146d716bda07226" ON "matches" ("scheduled_time") `);
+        await queryRunner.query(`CREATE INDEX "IDX_a182c2c9602fbab4e0cf680090" ON "matches" ("status") `);
+        await queryRunner.query(`CREATE TYPE "public"."event_participants_status_enum" AS ENUM('REGISTERED', 'CHECKED_IN', 'WITHDRAWN', 'DISQUALIFIED')`);
+        await queryRunner.query(`CREATE TABLE "event_participants" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "event_id" uuid NOT NULL, "session_id" uuid, "athlete_id" uuid NOT NULL, "user_id" uuid NOT NULL, "partner_id" uuid, "ticket_code" character varying(20) NOT NULL, "registration_date" TIMESTAMP NOT NULL, "checkin_date" TIMESTAMP, "status" "public"."event_participants_status_enum" NOT NULL DEFAULT 'REGISTERED', "bib_number" character varying, "customData" jsonb, CONSTRAINT "PK_b65ffd558d76fd51baffe81d42b" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_b5349807aae71193d0cc0f52e3" ON "event_participants" ("event_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_1decb0da1b21bb5ab65212bc63" ON "event_participants" ("session_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_8b38fac73b55a1518fb288cbea" ON "event_participants" ("athlete_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_ce3f433e47fdd8f072964293c8" ON "event_participants" ("user_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_c47c5e2747d3724c856d9aac0c" ON "event_participants" ("ticket_code") `);
+        await queryRunner.query(`CREATE INDEX "IDX_bd617cd8b316446a126b3bf4bd" ON "event_participants" ("status") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_634ebba00696d8b00e4a71315b" ON "event_participants" ("event_id", "athlete_id") `);
+        await queryRunner.query(`CREATE TABLE "athlete_stats" ("created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "athlete_id" uuid NOT NULL, "date" date NOT NULL, "rating" numeric(5,2) NOT NULL, "matches_played" integer NOT NULL DEFAULT '0', "wins" integer NOT NULL DEFAULT '0', "losses" integer NOT NULL DEFAULT '0', "events_participated" integer NOT NULL DEFAULT '0', CONSTRAINT "PK_3d536538a9d11ad698653a4bc53" PRIMARY KEY ("id"))`);
+        await queryRunner.query(`CREATE INDEX "IDX_6e170c345e4f3689c2e35ebf8e" ON "athlete_stats" ("athlete_id") `);
+        await queryRunner.query(`CREATE INDEX "IDX_5ddeb773c68d33ba15b90081ed" ON "athlete_stats" ("date") `);
+        await queryRunner.query(`CREATE UNIQUE INDEX "IDX_6bbeed466a5316a260bec2cb7a" ON "athlete_stats" ("athlete_id", "date") `);
+        await queryRunner.query(`ALTER TABLE "athletes" ADD CONSTRAINT "FK_cec24cd7ba9d1a0730443b93ce1" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "leaderboard_entries" ADD CONSTRAINT "FK_5608daf78af66752b196bc49d45" FOREIGN KEY ("leaderboard_id") REFERENCES "leaderboards"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "leaderboard_entries" ADD CONSTRAINT "FK_50d2441d38d001c256920559f14" FOREIGN KEY ("athlete_id") REFERENCES "athletes"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "match_scores" ADD CONSTRAINT "FK_28dc8ea45e3e9e898ddf8c8dda7" FOREIGN KEY ("match_id") REFERENCES "matches"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "matches" ADD CONSTRAINT "FK_bd03125435af95f8aaba5a672b4" FOREIGN KEY ("session_id") REFERENCES "event_sessions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "event_participants" ADD CONSTRAINT "FK_b5349807aae71193d0cc0f52e35" FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "event_participants" ADD CONSTRAINT "FK_1decb0da1b21bb5ab65212bc636" FOREIGN KEY ("session_id") REFERENCES "event_sessions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "event_participants" ADD CONSTRAINT "FK_8b38fac73b55a1518fb288cbeab" FOREIGN KEY ("athlete_id") REFERENCES "athletes"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "event_participants" ADD CONSTRAINT "FK_ce3f433e47fdd8f072964293c8d" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "event_participants" ADD CONSTRAINT "FK_c79906310ab74507bbe3910ee47" FOREIGN KEY ("partner_id") REFERENCES "athletes"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE "athlete_stats" ADD CONSTRAINT "FK_6e170c345e4f3689c2e35ebf8e7" FOREIGN KEY ("athlete_id") REFERENCES "athletes"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE "athlete_stats" DROP CONSTRAINT "FK_6e170c345e4f3689c2e35ebf8e7"`);
+        await queryRunner.query(`ALTER TABLE "event_participants" DROP CONSTRAINT "FK_c79906310ab74507bbe3910ee47"`);
+        await queryRunner.query(`ALTER TABLE "event_participants" DROP CONSTRAINT "FK_ce3f433e47fdd8f072964293c8d"`);
+        await queryRunner.query(`ALTER TABLE "event_participants" DROP CONSTRAINT "FK_8b38fac73b55a1518fb288cbeab"`);
+        await queryRunner.query(`ALTER TABLE "event_participants" DROP CONSTRAINT "FK_1decb0da1b21bb5ab65212bc636"`);
+        await queryRunner.query(`ALTER TABLE "event_participants" DROP CONSTRAINT "FK_b5349807aae71193d0cc0f52e35"`);
+        await queryRunner.query(`ALTER TABLE "matches" DROP CONSTRAINT "FK_bd03125435af95f8aaba5a672b4"`);
+        await queryRunner.query(`ALTER TABLE "match_scores" DROP CONSTRAINT "FK_28dc8ea45e3e9e898ddf8c8dda7"`);
+        await queryRunner.query(`ALTER TABLE "leaderboard_entries" DROP CONSTRAINT "FK_50d2441d38d001c256920559f14"`);
+        await queryRunner.query(`ALTER TABLE "leaderboard_entries" DROP CONSTRAINT "FK_5608daf78af66752b196bc49d45"`);
+        await queryRunner.query(`ALTER TABLE "athletes" DROP CONSTRAINT "FK_cec24cd7ba9d1a0730443b93ce1"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_6bbeed466a5316a260bec2cb7a"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_5ddeb773c68d33ba15b90081ed"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_6e170c345e4f3689c2e35ebf8e"`);
+        await queryRunner.query(`DROP TABLE "athlete_stats"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_634ebba00696d8b00e4a71315b"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_bd617cd8b316446a126b3bf4bd"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_c47c5e2747d3724c856d9aac0c"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_ce3f433e47fdd8f072964293c8"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_8b38fac73b55a1518fb288cbea"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_1decb0da1b21bb5ab65212bc63"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_b5349807aae71193d0cc0f52e3"`);
+        await queryRunner.query(`DROP TABLE "event_participants"`);
+        await queryRunner.query(`DROP TYPE "public"."event_participants_status_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_a182c2c9602fbab4e0cf680090"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_e7b547e6f36146d716bda07226"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_bd03125435af95f8aaba5a672b"`);
+        await queryRunner.query(`DROP TABLE "matches"`);
+        await queryRunner.query(`DROP TYPE "public"."matches_status_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_2ef367261b0602f40969abe532"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_28dc8ea45e3e9e898ddf8c8dda"`);
+        await queryRunner.query(`DROP TABLE "match_scores"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_9facf49baa7f020b4231ef3cca"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_e87cb135cd85f53e57c36bdfc2"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_366354b67712a986663bdeb383"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_81e8a2b8994dd6b83d016d2ff1"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_66bbd1c8e74d9d609f226f869e"`);
+        await queryRunner.query(`DROP TABLE "leaderboards"`);
+        await queryRunner.query(`DROP TYPE "public"."leaderboards_sport_type_enum"`);
+        await queryRunner.query(`DROP TYPE "public"."leaderboards_type_enum"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_ac02c10cd91dfddf89ecf65914"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_3b694666387362611b511ce4e8"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_5538159e5c1b4a7d53b7cb5bf9"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_50d2441d38d001c256920559f1"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_5608daf78af66752b196bc49d4"`);
+        await queryRunner.query(`DROP TABLE "leaderboard_entries"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_96abed954edf63430d093cefbc"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_93d34a15a24eaa47c8a850699a"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_86d25d1064e6b48ebe52e39a46"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_191703491f634eedd491deaa6b"`);
+        await queryRunner.query(`DROP INDEX "public"."IDX_cec24cd7ba9d1a0730443b93ce"`);
+        await queryRunner.query(`DROP TABLE "athletes"`);
+        await queryRunner.query(`DROP TYPE "public"."athletes_sport_type_enum"`);
+    }
+
+}

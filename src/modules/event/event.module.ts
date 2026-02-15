@@ -8,8 +8,17 @@ import { EventSession } from './entities/event-session.entity';
 import { TicketTier } from './entities/ticket-tier.entity';
 import { EventCustomField } from './entities/event-custom-field.entity';
 import { EventBlacklist } from './entities/event-blacklist.entity';
+import { Match } from './entities/match.entity';
+import { MatchScore } from './entities/match-score.entity';
+import { EventParticipant } from './entities/event-participant.entity';
+
 import { EventController } from './event.controller';
+import { MatchController } from './match.controller';
+import { ParticipantController } from './participant.controller';
+
 import { EventService } from './event.service';
+import { MatchService } from './match.service';
+import { ParticipantService } from './participant.service';
 
 @Module({
   imports: [
@@ -21,10 +30,13 @@ import { EventService } from './event.service';
       TicketTier,
       EventCustomField,
       EventBlacklist,
+      Match,
+      MatchScore,
+      EventParticipant,
     ]),
   ],
-  controllers: [EventController],
-  providers: [EventService],
-  exports: [EventService],
+  controllers: [EventController, MatchController, ParticipantController],
+  providers: [EventService, MatchService, ParticipantService],
+  exports: [EventService, MatchService, ParticipantService],
 })
 export class EventModule {}

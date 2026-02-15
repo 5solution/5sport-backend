@@ -11,6 +11,8 @@ import { BotModule } from './bot/bot.module';
 import { UserModule } from './user/user.module';
 import { EventModule } from './event/event.module';
 import { ProvinceModule } from './province/province.module';
+import { AthleteModule } from './athlete/athlete.module';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { ProvinceModule } from './province/province.module';
     BotModule,
     EventModule,
     ProvinceModule,
+    AthleteModule,
+    LeaderboardModule,
   ],
 })
 export class AppModule {}
