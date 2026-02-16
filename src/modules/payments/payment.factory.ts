@@ -11,8 +11,29 @@ export class PaymentFactory {
     private readonly payxProvider: PayxProvider,
   ) {}
 
-  getProvider(paymentMethod: PaymentMethod): IPaymentProvider {
-    switch (paymentMethod) {
+  getProvider(paymentMethod: PaymentMethod | string): IPaymentProvider {
+    // Normalize input: convert string to uppercase and handle variations
+    let normalizedMethod = paymentMethod;
+
+    if (typeof paymentMethod === 'string') {
+      normalizedMethod = paymentMethod.toUpperCase();
+
+      // Map common aliases to enum values
+      const methodMap: Record<string, PaymentMethod> = {
+        'VNPAY': PaymentMethod.VNPAY_QR,
+        'VNPAY_QR': PaymentMethod.VNPAY_QR,
+        'VNPAY_DOMESTIC': PaymentMethod.DOMESTIC_CARD,
+        'DOMESTIC_CARD': PaymentMethod.DOMESTIC_CARD,
+        'INTERNATIONAL_CARD': PaymentMethod.INTERNATIONAL_CARD,
+        'PAYX': PaymentMethod.PAYX_QR,
+        'PAYX_QR': PaymentMethod.PAYX_QR,
+        'PAYX_DOMESTIC': PaymentMethod.PAYX_DOMESTIC,
+      };
+
+      normalizedMethod = methodMap[normalizedMethod] || (normalizedMethod as any);
+    }
+
+    switch (normalizedMethod) {
       case PaymentMethod.VNPAY_QR:
       case PaymentMethod.DOMESTIC_CARD:
       case PaymentMethod.INTERNATIONAL_CARD:

@@ -116,7 +116,16 @@ export class PaymentsService {
       await this.paymentRepo.save(payment);
     }
 
-    return result;
+    // Return full response with verification status for frontend
+    const isSuccess = result.status === PaymentTransactionStatus.SUCCESS;
+
+    return {
+      ...result,
+      isSuccess,
+      isVerified: true,
+      // Include all VNPay query params for frontend display
+      ...queryParams,
+    };
   }
 
   async inquirePayment(orderId: string) {
