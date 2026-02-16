@@ -12,6 +12,13 @@ const envVarsSchema = Joi.object()
     POSTGRES_URL: Joi.string().required(),
     REDIS_URL: Joi.string().required(),
     TELEGRAM_BOT_TOKEN: Joi.string().required(),
+
+    VNPAY_TMN_CODE: Joi.string().required(),
+    VNPAY_HASH_SECRET_KEY: Joi.string().required(),
+
+    PAYX_MERCHANT_CODE: Joi.string().required(),
+    PAYX_SECRET_KEY: Joi.string().required(),
+    PAYX_API_URL: Joi.string().required(),
   })
   .unknown();
 
@@ -33,4 +40,13 @@ export const env = {
   },
   redisUrl: envVars.REDIS_URL,
   telegramBotToken: envVars.TELEGRAM_BOT_TOKEN,
+  vnpay: {
+    tmnCode: envVars.VNPAY_TMN_CODE,
+    hashSecretKey: envVars.VNPAY_HASH_SECRET_KEY,
+  },
+  payx: {
+    merchantCode: envVars.PAYX_MERCHANT_CODE,
+    secretKey: envVars.PAYX_SECRET_KEY,
+    apiUrl: envVars.PAYX_API_URL,
+  },
 };
