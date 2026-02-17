@@ -1,3 +1,4 @@
+import { S3 } from '@aws-sdk/client-s3';
 import * as dotenv from 'dotenv';
 import * as Joi from 'joi';
 dotenv.config();
@@ -19,6 +20,12 @@ const envVarsSchema = Joi.object()
     PAYX_MERCHANT_CODE: Joi.string().required(),
     PAYX_SECRET_KEY: Joi.string().required(),
     PAYX_API_URL: Joi.string().required(),
+
+    AWS_ACCESS_KEY: Joi.string().required(),
+    AWS_SECRET_KEY: Joi.string().required(),
+    AWS_REGION: Joi.string().required(),
+
+    S3_BUCKET_NAME: Joi.string().required(),
   })
   .unknown();
 
@@ -48,5 +55,11 @@ export const env = {
     merchantCode: envVars.PAYX_MERCHANT_CODE,
     secretKey: envVars.PAYX_SECRET_KEY,
     apiUrl: envVars.PAYX_API_URL,
+  },
+  aws: {
+    accessKey: envVars.AWS_ACCESS_KEY,
+    secretKey: envVars.AWS_SECRET_KEY,
+    region: envVars.AWS_REGION,
+    bucketName: envVars.S3_BUCKET_NAME,
   },
 };

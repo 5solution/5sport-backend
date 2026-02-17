@@ -69,11 +69,7 @@ export class EventService {
     return event;
   }
 
-  assertOwnership(
-    event: Event,
-    userId: string,
-    userRole: Role,
-  ): void {
+  assertOwnership(event: Event, userId: string, userRole: Role): void {
     if (userRole === Role.ADMIN) return;
     if (event.organizerId !== userId) {
       throw new ForbiddenException(
@@ -84,17 +80,16 @@ export class EventService {
 
   // ─── Event CRUD ───
 
-  async create(
-    dto: CreateEventDto,
-    userId: string,
-  ): Promise<Event> {
+  async create(dto: CreateEventDto, userId: string): Promise<Event> {
     validateTimeline(dto);
 
     const slug = dto.slug || generateSlug(dto.name);
 
     const existing = await this.eventRepo.findOne({ where: { slug } });
     if (existing) {
-      throw new BadRequestException('Slug đã tồn tại. Vui lòng chọn slug khác.');
+      throw new BadRequestException(
+        'Slug đã tồn tại. Vui lòng chọn slug khác.',
+      );
     }
 
     const event = this.eventRepo.create({
@@ -188,11 +183,7 @@ export class EventService {
     return this.eventRepo.save(event);
   }
 
-  async delete(
-    id: string,
-    userId: string,
-    userRole: Role,
-  ): Promise<void> {
+  async delete(id: string, userId: string, userRole: Role): Promise<void> {
     const event = await this.findEventOrFail(id);
     this.assertOwnership(event, userId, userRole);
 
@@ -207,11 +198,7 @@ export class EventService {
 
   // ─── Publish / Cancel ───
 
-  async publish(
-    id: string,
-    userId: string,
-    userRole: Role,
-  ): Promise<Event> {
+  async publish(id: string, userId: string, userRole: Role): Promise<Event> {
     const event = await this.eventRepo.findOne({
       where: { id },
       relations: ['sessions', 'sessions.ticketTiers'],
@@ -242,9 +229,7 @@ export class EventService {
     if (event.sessions) {
       for (const session of event.sessions) {
         if (!session.ticketTiers || session.ticketTiers.length === 0) {
-          errors.push(
-            `Hạng mục "${session.name}" cần ít nhất 1 loại vé.`,
-          );
+          errors.push(`Hạng mục "${session.name}" cần ít nhất 1 loại vé.`);
         }
       }
     }
@@ -257,11 +242,7 @@ export class EventService {
     return this.eventRepo.save(event);
   }
 
-  async cancel(
-    id: string,
-    userId: string,
-    userRole: Role,
-  ): Promise<Event> {
+  async cancel(id: string, userId: string, userRole: Role): Promise<Event> {
     const event = await this.findEventOrFail(id);
     this.assertOwnership(event, userId, userRole);
 
@@ -364,10 +345,7 @@ export class EventService {
     this.assertOwnership(event, userId, userRole);
 
     for (let i = 0; i < dto.ids.length; i++) {
-      await this.descRepo.update(
-        { id: dto.ids[i], eventId },
-        { sortOrder: i },
-      );
+      await this.descRepo.update({ id: dto.ids[i], eventId }, { sortOrder: i });
     }
   }
 
@@ -387,9 +365,7 @@ export class EventService {
       where: { eventId, ticketCode: dto.ticketCode.toUpperCase() },
     });
     if (existingCode) {
-      throw new BadRequestException(
-        'Mã vé đã tồn tại trong sự kiện này.',
-      );
+      throw new BadRequestException('Mã vé đã tồn tại trong sự kiện này.');
     }
 
     if (dto.matchType === MatchType.SINGLES) {
@@ -471,7 +447,11 @@ export class EventService {
       dto.price = null;
     }
 
-    if (dto.minPerOrder && dto.maxPerOrder && dto.minPerOrder > dto.maxPerOrder) {
+    if (
+      dto.minPerOrder &&
+      dto.maxPerOrder &&
+      dto.minPerOrder > dto.maxPerOrder
+    ) {
       throw new BadRequestException(
         'Số lượng vé tối thiểu phải nhỏ hơn hoặc bằng tối đa.',
       );
@@ -663,9 +643,7 @@ export class EventService {
     return this.eventRepo.save(event);
   }
 
-  async getScoringConfig(
-    eventId: string,
-  ): Promise<Record<string, any> | null> {
+  async getScoringConfig(eventId: string): Promise<Record<string, any> | null> {
     const event = await this.findEventOrFail(eventId);
     return event.scoringConfig;
   }

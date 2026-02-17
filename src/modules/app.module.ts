@@ -14,6 +14,8 @@ import { ProvinceModule } from './province/province.module';
 import { AthleteModule } from './athlete/athlete.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { PaymentsModule } from './payments/payments.module';
+import { s3ClientProvider } from './aws.config';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { PaymentsModule } from './payments/payments.module';
     AthleteModule,
     LeaderboardModule,
     PaymentsModule,
+    UploadModule,
   ],
+  providers: [s3ClientProvider],
 })
 export class AppModule {}
