@@ -12,19 +12,19 @@ describe('MatchService', () => {
   let scoreRepository: Repository<MatchScore>;
 
   const mockMatchRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    find: jest.fn(),
-    remove: jest.fn(),
-    createQueryBuilder: jest.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    find: vi.fn(),
+    remove: vi.fn(),
+    createQueryBuilder: vi.fn(),
   };
 
   const mockScoreRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    find: jest.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    find: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -50,7 +50,7 @@ describe('MatchService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {
@@ -281,10 +281,10 @@ describe('MatchService', () => {
       ];
 
       const queryBuilder: any = {
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(matches),
+        leftJoin: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        getMany: vi.fn().mockResolvedValue(matches),
       };
 
       mockMatchRepository.createQueryBuilder.mockReturnValue(queryBuilder);

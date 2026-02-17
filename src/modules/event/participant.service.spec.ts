@@ -11,12 +11,12 @@ describe('ParticipantService', () => {
   let participantRepository: Repository<EventParticipant>;
 
   const mockParticipantRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    find: jest.fn(),
-    count: jest.fn(),
-    remove: jest.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    find: vi.fn(),
+    count: vi.fn(),
+    remove: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -37,7 +37,7 @@ describe('ParticipantService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {

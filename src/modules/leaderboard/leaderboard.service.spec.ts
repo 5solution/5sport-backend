@@ -15,21 +15,21 @@ describe('LeaderboardService', () => {
   let athleteRepository: Repository<Athlete>;
 
   const mockLeaderboardRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    find: jest.fn(),
-    findAndCount: jest.fn(),
-    remove: jest.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    find: vi.fn(),
+    findAndCount: vi.fn(),
+    remove: vi.fn(),
   };
 
   const mockEntryRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    find: jest.fn(),
-    findAndCount: jest.fn(),
-    remove: jest.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    find: vi.fn(),
+    findAndCount: vi.fn(),
+    remove: vi.fn(),
   };
 
   const mockAthleteRepository = {};
@@ -66,7 +66,7 @@ describe('LeaderboardService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {

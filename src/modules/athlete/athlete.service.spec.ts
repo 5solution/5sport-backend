@@ -16,20 +16,20 @@ describe('AthleteService', () => {
   let statsRepository: Repository<AthleteStats>;
 
   const mockAthleteRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    find: jest.fn(),
-    findAndCount: jest.fn(),
-    softRemove: jest.fn(),
-    createQueryBuilder: jest.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    find: vi.fn(),
+    findAndCount: vi.fn(),
+    softRemove: vi.fn(),
+    createQueryBuilder: vi.fn(),
   };
 
   const mockStatsRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-    createQueryBuilder: jest.fn(),
+    create: vi.fn(),
+    save: vi.fn(),
+    findOne: vi.fn(),
+    createQueryBuilder: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -57,7 +57,7 @@ describe('AthleteService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {
@@ -238,10 +238,10 @@ describe('AthleteService', () => {
   describe('search', () => {
     it('should search athletes by name', async () => {
       const queryBuilder: any = {
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([{ id: '1', name: 'John' }]),
+        where: vi.fn().mockReturnThis(),
+        andWhere: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        getMany: vi.fn().mockResolvedValue([{ id: '1', name: 'John' }]),
       };
 
       mockAthleteRepository.createQueryBuilder.mockReturnValue(queryBuilder);
