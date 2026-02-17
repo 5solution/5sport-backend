@@ -12,8 +12,41 @@ env:
   FULL_COMMIT_HASH: "${{ github.sha }}"
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run unit tests
+        run: pnpm run test
+        env:
+          NODE_ENV: test
+          NETWORK: testnet
+          PORT: 3000
+          POSTGRES_URL: postgres://test:test@localhost:5432/test
+          REDIS_URL: redis://localhost:6379
+          TELEGRAM_BOT_TOKEN: test_token
+          VNPAY_TMN_CODE: test_tmn_code
+          VNPAY_HASH_SECRET_KEY: test_hash_secret
+          PAYX_MERCHANT_CODE: test_merchant_code
+          PAYX_SECRET_KEY: test_payx_secret
+          PAYX_API_URL: https://test.payx.com
+          AWS_ACCESS_KEY: test_access_key
+          AWS_SECRET_KEY: test_secret_key
+          AWS_REGION: us-east-1
+          S3_BUCKET_NAME: test-bucket
+
   # This pushes the image to GitHub Packages.
   build-push-deploy:
+    needs: [test]
     runs-on: ubuntu-latest
     permissions:
       packages: write
