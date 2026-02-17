@@ -17,14 +17,28 @@ export class WardDto {
   province_code: number;
 }
 
+export class ProvinceDtoResponse {
+  @ApiProperty({
+    description: 'Danh sách tỉnh/thành phố',
+    type: Array<ProvinceDto>,
+  })
+  data: ProvinceDto[];
+}
+
 export class ProvinceDto {
-  @ApiProperty({ description: 'Tên tỉnh/thành phố', example: 'Thành phố Hà Nội' })
+  @ApiProperty({
+    description: 'Tên tỉnh/thành phố',
+    example: 'Thành phố Hà Nội',
+  })
   name: string;
 
   @ApiProperty({ description: 'Mã tỉnh/thành phố', example: 1 })
   code: number;
 
-  @ApiProperty({ description: 'Loại đơn vị hành chính', example: 'thành phố trung ương' })
+  @ApiProperty({
+    description: 'Loại đơn vị hành chính',
+    example: 'thành phố trung ương',
+  })
   division_type: string;
 
   @ApiProperty({ description: 'Tên mã', example: 'ha_noi' })

@@ -223,6 +223,7 @@ export class EventService {
     if (!event.paymentMethods || event.paymentMethods.length === 0) {
       errors.push('Phương thức thanh toán là bắt buộc.');
     }
+    console.log('Sessions for validation:', event.sessions);
     if (!event.sessions || event.sessions.length === 0) {
       errors.push('Cần ít nhất 1 hạng mục thi đấu.');
     }
