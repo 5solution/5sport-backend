@@ -11,6 +11,7 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, '**/*.e2e-spec.ts'],
     globals: true,
     root: './',
+    setupFiles: ['./test/vitest-setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

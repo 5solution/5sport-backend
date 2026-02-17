@@ -63,4 +63,4 @@ jobs:
           PORT: 3000
           POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/5sport_test
           REDIS_URL: redis://localhost:6379
-          TELE_BOT_TOKEN: test_token
+          TELEGRAM_BOT_TOKEN: test_token
