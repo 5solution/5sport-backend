@@ -21,7 +21,8 @@
     "typeorm:cli": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli",
     "migration:generate": "npm run typeorm:cli -- -d src/libs/typeorm.config.ts migration:generate src/migrations/migrations",
     "migration:up": "npm run typeorm:cli migration:run -- -d src/libs/typeorm.config.ts",
-    "migration:down": "npm run typeorm:cli -- -d src/libs/typeorm.config.ts migration:revert"
+    "migration:down": "npm run typeorm:cli -- -d src/libs/typeorm.config.ts migration:revert",
+    "seed:provinces": "ts-node -r tsconfig-paths/register src/scripts/seed-provinces.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.991.0",
