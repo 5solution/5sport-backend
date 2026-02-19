@@ -14,6 +14,7 @@ import * as morgan from 'morgan';
 import { env } from './config';
 import { AppModule } from './modules/app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 const setMiddleware = (app: NestExpressApplication) => {
   app.use(helmet());
@@ -59,6 +60,7 @@ async function bootstrap() {
 
   setMiddleware(app);
 
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   if (process.env.NODE_ENV !== 'production') {
