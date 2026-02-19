@@ -1,10 +1,10 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import {
-  ApiOkResponse,
   ApiOperation,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { ApiSuccessResponse } from 'src/common/decorators/api-success-response.decorator';
 
 import { ProvinceService } from './province.service';
 import {
@@ -25,7 +25,7 @@ export class ProvinceController {
     required: false,
     description: 'Tìm kiếm theo tên',
   })
-  @ApiOkResponse({ type: [ProvinceDto] })
+  @ApiSuccessResponse(ProvinceDto, { isArray: true })
   async listProvinces(@Query('search') search?: string) {
     return this.provinceService.listProvinces(search);
   }
@@ -38,7 +38,7 @@ export class ProvinceController {
     description: '2: kèm danh sách phường/xã',
     enum: [1, 2],
   })
-  @ApiOkResponse({ type: ProvinceDto })
+  @ApiSuccessResponse(ProvinceDto)
   async getProvince(
     @Param('code', ParseIntPipe) code: number,
     @Query('depth') depth?: number,
@@ -56,7 +56,7 @@ export class ProvinceController {
     required: false,
     description: 'Tìm kiếm theo tên',
   })
-  @ApiOkResponse({ type: [WardDto] })
+  @ApiSuccessResponse(WardDto, { isArray: true })
   async listWardsByProvince(
     @Param('code', ParseIntPipe) code: number,
     @Query('search') search?: string,
@@ -66,7 +66,7 @@ export class ProvinceController {
 
   @Get('wards/:code')
   @ApiOperation({ summary: 'Chi tiết phường/xã' })
-  @ApiOkResponse({ type: WardDto })
+  @ApiSuccessResponse(WardDto)
   async getWard(@Param('code', ParseIntPipe) code: number) {
     return this.provinceService.getWard(code);
   }

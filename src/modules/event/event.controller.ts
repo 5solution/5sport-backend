@@ -13,12 +13,14 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiCreatedResponse,
   ApiNoContentResponse,
-  ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import {
+  ApiSuccessResponse,
+  ApiCreatedSuccessResponse,
+} from 'src/common/decorators/api-success-response.decorator';
 
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -66,9 +68,8 @@ export class EventController {
     summary: 'Tạo mới sự kiện',
     description: 'Tạo một sự kiện mới với trạng thái DRAFT',
   })
-  @ApiCreatedResponse({
+  @ApiCreatedSuccessResponse(EventResponseDto, {
     description: 'Sự kiện được tạo thành công',
-    type: EventResponseDto,
   })
   create(@Body() dto: CreateEventDto, @CurrentUser() user: User) {
     return this.eventService.create(dto, user.id);
@@ -79,7 +80,7 @@ export class EventController {
     summary: 'Danh sách sự kiện',
     description: 'Lấy danh sách các sự kiện của người dùng (phân trang)',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(null, {
     description: 'Danh sách sự kiện',
     schema: {
       properties: {
@@ -97,9 +98,8 @@ export class EventController {
     summary: 'Chi tiết sự kiện',
     description: 'Lấy thông tin chi tiết một sự kiện',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(EventResponseDto, {
     description: 'Thông tin sự kiện',
-    type: EventResponseDto,
   })
   findOne(@Param('id') id: string) {
     return this.eventService.findById(id);
@@ -110,9 +110,8 @@ export class EventController {
     summary: 'Cập nhật sự kiện',
     description: 'Cập nhật thông tin sự kiện',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(EventResponseDto, {
     description: 'Sự kiện được cập nhật thành công',
-    type: EventResponseDto,
   })
   update(
     @Param('id') id: string,
@@ -140,9 +139,8 @@ export class EventController {
     summary: 'Xuất bản sự kiện',
     description: 'Chuyển sự kiện từ DRAFT sang PUBLISHED',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(EventResponseDto, {
     description: 'Sự kiện được xuất bản thành công',
-    type: EventResponseDto,
   })
   publish(@Param('id') id: string, @CurrentUser() user: User) {
     return this.eventService.publish(id, user.id, user.role);
@@ -153,9 +151,8 @@ export class EventController {
     summary: 'Hủy sự kiện',
     description: 'Hủy sự kiện (từ PUBLISHED hoặc LIVE)',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(EventResponseDto, {
     description: 'Sự kiện được hủy thành công',
-    type: EventResponseDto,
   })
   cancel(@Param('id') id: string, @CurrentUser() user: User) {
     return this.eventService.cancel(id, user.id, user.role);
@@ -168,9 +165,8 @@ export class EventController {
     summary: 'Thêm mô tả sự kiện',
     description: 'Thêm một khối mô tả mới cho sự kiện',
   })
-  @ApiCreatedResponse({
+  @ApiCreatedSuccessResponse(DescriptionResponseDto, {
     description: 'Mô tả được tạo thành công',
-    type: DescriptionResponseDto,
   })
   addDescription(
     @Param('id') id: string,
@@ -185,9 +181,8 @@ export class EventController {
     summary: 'Cập nhật mô tả',
     description: 'Cập nhật nội dung mô tả sự kiện',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(DescriptionResponseDto, {
     description: 'Mô tả được cập nhật thành công',
-    type: DescriptionResponseDto,
   })
   updateDescription(
     @Param('id') id: string,
@@ -244,9 +239,8 @@ export class EventController {
     summary: 'Tạo hạng mục thi đấu',
     description: 'Tạo một hạng mục thi đấu mới (ca thi đấu)',
   })
-  @ApiCreatedResponse({
+  @ApiCreatedSuccessResponse(SessionResponseDto, {
     description: 'Hạng mục được tạo thành công',
-    type: SessionResponseDto,
   })
   createSession(
     @Param('id') id: string,
@@ -261,9 +255,8 @@ export class EventController {
     summary: 'Cập nhật hạng mục thi đấu',
     description: 'Cập nhật thông tin hạng mục thi đấu',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(SessionResponseDto, {
     description: 'Hạng mục được cập nhật thành công',
-    type: SessionResponseDto,
   })
   updateSession(
     @Param('id') id: string,
@@ -304,9 +297,8 @@ export class EventController {
     summary: 'Tạo loại vé',
     description: 'Tạo một loại vé mới cho hạng mục thi đấu',
   })
-  @ApiCreatedResponse({
+  @ApiCreatedSuccessResponse(TicketTierResponseDto, {
     description: 'Loại vé được tạo thành công',
-    type: TicketTierResponseDto,
   })
   createTicketTier(
     @Param('id') id: string,
@@ -328,9 +320,8 @@ export class EventController {
     summary: 'Cập nhật loại vé',
     description: 'Cập nhật thông tin loại vé',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(TicketTierResponseDto, {
     description: 'Loại vé được cập nhật thành công',
-    type: TicketTierResponseDto,
   })
   updateTicketTier(
     @Param('id') id: string,
@@ -375,14 +366,26 @@ export class EventController {
 
   // ─── Custom Fields ───
 
+  @Get(':id/fields')
+  @ApiOperation({
+    summary: 'Danh sách trường dữ liệu tùy chỉnh',
+    description: 'Lấy tất cả câu hỏi trong form đăng ký của sự kiện',
+  })
+  @ApiSuccessResponse(CustomFieldResponseDto, {
+    description: 'Danh sách trường dữ liệu',
+    isArray: true,
+  })
+  getCustomFields(@Param('id') id: string) {
+    return this.eventService.getCustomFields(id);
+  }
+
   @Post(':id/fields')
   @ApiOperation({
     summary: 'Thêm trường dữ liệu tùy chỉnh',
     description: 'Thêm một câu hỏi mới trong form đăng ký',
   })
-  @ApiCreatedResponse({
+  @ApiCreatedSuccessResponse(CustomFieldResponseDto, {
     description: 'Trường dữ liệu được tạo thành công',
-    type: CustomFieldResponseDto,
   })
   addCustomField(
     @Param('id') id: string,
@@ -397,9 +400,8 @@ export class EventController {
     summary: 'Cập nhật trường dữ liệu',
     description: 'Cập nhật thông tin câu hỏi trong form đăng ký',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(CustomFieldResponseDto, {
     description: 'Trường dữ liệu được cập nhật thành công',
-    type: CustomFieldResponseDto,
   })
   updateCustomField(
     @Param('id') id: string,
@@ -456,9 +458,8 @@ export class EventController {
     summary: 'Cấu hình luật thi đấu',
     description: 'Thiết lập các luật tính điểm dựa trên loại thể thao',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(EventResponseDto, {
     description: 'Cấu hình được lưu thành công',
-    type: EventResponseDto,
   })
   saveScoringConfig(
     @Param('id') id: string,
@@ -473,7 +474,7 @@ export class EventController {
     summary: 'Lấy cấu hình luật thi đấu',
     description: 'Lấy thông tin cấu hình luật thi đấu của sự kiện',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(null, {
     description: 'Cấu hình luật thi đấu',
     schema: {
       properties: {
@@ -496,10 +497,9 @@ export class EventController {
     summary: 'Cập nhật danh sách chặn',
     description: 'Thay thế danh sách email/SĐT bị chặn',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(BlacklistResponseDto, {
     description: 'Danh sách chặn được cập nhật thành công',
     isArray: true,
-    type: BlacklistResponseDto,
   })
   setBlacklist(
     @Param('id') id: string,
@@ -514,10 +514,9 @@ export class EventController {
     summary: 'Lấy danh sách chặn',
     description: 'Lấy tất cả email/SĐT bị chặn',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(BlacklistResponseDto, {
     description: 'Danh sách chặn',
     isArray: true,
-    type: BlacklistResponseDto,
   })
   getBlacklist(@Param('id') id: string) {
     return this.eventService.getBlacklist(id);

@@ -12,13 +12,15 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiConflictResponse,
-  ApiCreatedResponse,
   ApiForbiddenResponse,
-  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import {
+  ApiSuccessResponse,
+  ApiCreatedSuccessResponse,
+} from 'src/common/decorators/api-success-response.decorator';
 import { Response } from 'express';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -50,9 +52,8 @@ export class AuthController {
     description: 'Create a new user account with email and password',
   })
   @ApiBody({ type: RegisterDto })
-  @ApiCreatedResponse({
+  @ApiCreatedSuccessResponse(AuthResponseDto, {
     description: 'User successfully registered',
-    type: AuthResponseDto,
   })
   @ApiBadRequestResponse({
     description:
@@ -73,9 +74,8 @@ export class AuthController {
     description: 'Authenticate user and return JWT token',
   })
   @ApiBody({ type: LoginDto })
-  @ApiOkResponse({
+  @ApiSuccessResponse(AuthResponseDto, {
     description: 'User successfully authenticated',
-    type: AuthResponseDto,
   })
   @ApiBadRequestResponse({
     description: 'Validation error - invalid email format',
@@ -95,9 +95,8 @@ export class AuthController {
     description: 'Verify Google ID token and return JWT token',
   })
   @ApiBody({ type: GoogleTokenDto })
-  @ApiOkResponse({
+  @ApiSuccessResponse(AuthResponseDto, {
     description: 'Google token verified and JWT issued',
-    type: AuthResponseDto,
   })
   @ApiUnauthorizedResponse({
     description: 'Invalid or expired Google ID token',
@@ -139,7 +138,7 @@ export class AuthController {
     summary: 'Logout user',
     description: 'Logout the authenticated user and invalidate the session',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(null, {
     description: 'User successfully logged out',
     schema: {
       type: 'object',
@@ -166,9 +165,8 @@ export class AuthController {
     summary: 'Get current user profile',
     description: 'Return the authenticated user profile from JWT token',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(UserResponseDto, {
     description: 'User profile retrieved successfully',
-    type: UserResponseDto,
   })
   @ApiUnauthorizedResponse({
     description: 'Invalid or missing JWT token',
@@ -186,7 +184,7 @@ export class AuthController {
     summary: 'Admin only endpoint example',
     description: 'This endpoint is only accessible by users with admin role',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(null, {
     description: 'Admin access granted',
     schema: {
       type: 'object',
@@ -215,7 +213,7 @@ export class AuthController {
     summary: 'Organizer dashboard endpoint',
     description: 'Accessible by organizers and admins',
   })
-  @ApiOkResponse({
+  @ApiSuccessResponse(null, {
     description: 'Organizer access granted',
     schema: {
       type: 'object',

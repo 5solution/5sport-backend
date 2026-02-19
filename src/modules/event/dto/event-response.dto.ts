@@ -53,11 +53,23 @@ export class EventResponseDto {
   })
   provinceCode: string;
 
+  @ApiPropertyOptional({
+    description: 'Tên tỉnh/thành',
+    example: 'Thành phố Hà Nội',
+  })
+  provinceName?: string;
+
   @ApiProperty({
     description: 'Mã phường/xã',
     example: '00001',
   })
   wardCode: string;
+
+  @ApiPropertyOptional({
+    description: 'Tên phường/xã',
+    example: 'Phường Láng Hạ',
+  })
+  wardName?: string;
 
   @ApiProperty({
     description: 'Mã tiền tố',

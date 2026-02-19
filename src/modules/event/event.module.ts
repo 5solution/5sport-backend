@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProvinceModule } from '../province/province.module';
 
 import { Event } from './entities/event.entity';
 import { EventMedia } from './entities/event-media.entity';
@@ -22,6 +23,7 @@ import { ParticipantService } from './participant.service';
 
 @Module({
   imports: [
+    ProvinceModule,
     TypeOrmModule.forFeature([
       Event,
       EventMedia,

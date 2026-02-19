@@ -41,6 +41,7 @@ import { validateTimeline } from './validators/timeline.validator';
 import { validateScoringConfig } from './validators/scoring-config.validator';
 import { generateSlug } from './utils/slug.util';
 import { parseBlacklist } from './utils/blacklist.util';
+import { ProvinceService } from '../province/province.service';
 
 @Injectable()
 export class EventService {
@@ -59,6 +60,7 @@ export class EventService {
     private readonly fieldRepo: Repository<EventCustomField>,
     @InjectRepository(EventBlacklist)
     private readonly blacklistRepo: Repository<EventBlacklist>,
+    private readonly provinceService: ProvinceService,
   ) {}
 
   // ─── Helpers ───
@@ -124,7 +126,7 @@ export class EventService {
     return new PaginatedResponseDto(events, total, page, limit);
   }
 
-  async findById(id: string): Promise<Event> {
+  async findById(id: string): Promise<Event & { provinceName: string | null; wardName: string | null }> {
     const event = await this.eventRepo.findOne({
       where: { id },
       relations: [
@@ -137,7 +139,16 @@ export class EventService {
       ],
     });
     if (!event) throw new NotFoundException('Sự kiện không tồn tại.');
-    return event;
+
+    const [province, ward] = await Promise.all([
+      this.provinceService.getProvince(parseInt(event.provinceCode)).catch(() => null),
+      this.provinceService.getWard(parseInt(event.wardCode)).catch(() => null),
+    ]);
+
+    return Object.assign(event, {
+      provinceName: province?.name ?? null,
+      wardName: ward?.name ?? null,
+    });
   }
 
   async update(
@@ -625,6 +636,14 @@ export class EventService {
         { sortOrder: i },
       );
     }
+  }
+
+  async getCustomFields(eventId: string): Promise<EventCustomField[]> {
+    await this.findEventOrFail(eventId);
+    return this.fieldRepo.find({
+      where: { eventId },
+      order: { sortOrder: 'ASC' },
+    });
   }
 
   // ─── Scoring Config ───

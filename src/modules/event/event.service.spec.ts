@@ -8,6 +8,7 @@ import {
 import { Repository } from 'typeorm';
 
 import { EventService } from './event.service';
+import { ProvinceService } from '../province/province.service';
 import { Event } from './entities/event.entity';
 import { EventMedia } from './entities/event-media.entity';
 import { EventDescription } from './entities/event-description.entity';
@@ -89,6 +90,13 @@ describe('EventService', () => {
         { provide: getRepositoryToken(TicketTier), useValue: ticketRepo },
         { provide: getRepositoryToken(EventCustomField), useValue: fieldRepo },
         { provide: getRepositoryToken(EventBlacklist), useValue: blacklistRepo },
+        {
+          provide: ProvinceService,
+          useValue: {
+            getProvince: vi.fn().mockResolvedValue({ name: 'Thành phố Hà Nội' }),
+            getWard: vi.fn().mockResolvedValue({ name: 'Phường Láng Hạ' }),
+          },
+        },
       ],
     }).compile();
 
