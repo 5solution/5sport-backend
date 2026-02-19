@@ -7,7 +7,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import * as morgan from 'morgan';
 
 // Set up your API key
 
@@ -15,6 +14,7 @@ import { env } from './config';
 import { AppModule } from './modules/app.module';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { httpLogger } from './common/middlewares/logger.middleware';
 
 const setMiddleware = (app: NestExpressApplication) => {
   app.use(helmet());
@@ -32,7 +32,7 @@ const setMiddleware = (app: NestExpressApplication) => {
     ],
   });
 
-  app.use(morgan('combined'));
+  app.use(httpLogger);
 
   app.use(compression());
 
