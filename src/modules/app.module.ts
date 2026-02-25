@@ -7,7 +7,7 @@ import { env } from 'src/config';
 import dataSource from 'src/libs/typeorm.config';
 
 import { AuthModule } from './auth/auth.module';
-import { BotModule } from './bot/bot.module';
+//import { BotModule } from './bot/bot.module';
 import { UserModule } from './user/user.module';
 import { EventModule } from './event/event.module';
 import { ProvinceModule } from './province/province.module';
@@ -32,7 +32,7 @@ import { SeedModule } from './seed/seed.module';
     ConfigModule,
     UserModule,
     AuthModule,
-    BotModule,
+    //BotModule, // Disabled: Telegram API unreachable in Docker
     EventModule,
     ProvinceModule,
     AthleteModule,
