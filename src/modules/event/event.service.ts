@@ -134,6 +134,8 @@ export class EventService {
         'descriptions',
         'sessions',
         'sessions.ticketTiers',
+        'sessions.stages',
+        'sessions.stages.matches',
         'customFields',
         'blacklist',
       ],

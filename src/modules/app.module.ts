@@ -16,6 +16,7 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { PaymentsModule } from './payments/payments.module';
 import { s3ClientProvider } from './aws.config';
 import { UploadModule } from './upload/upload.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { UploadModule } from './upload/upload.module';
     LeaderboardModule,
     PaymentsModule,
     UploadModule,
+    SeedModule,
   ],
   providers: [s3ClientProvider],
 })

@@ -10,6 +10,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BaseEntityWithoutId } from 'src/utils/base/base-entity';
 import { EventSession } from './event-session.entity';
+import { Stage } from './stage.entity';
 import { Athlete } from 'src/modules/athlete/entities/athlete.entity';
 import { MatchScore } from './match-score.entity';
 
@@ -41,6 +42,33 @@ export class Match extends BaseEntityWithoutId {
   @ManyToOne(() => EventSession)
   @JoinColumn({ name: 'session_id' })
   session: EventSession;
+
+  @ApiPropertyOptional({ description: 'Stage ID' })
+  @Column({ name: 'stage_id', nullable: true })
+  @Index()
+  stageId: string;
+
+  @ApiPropertyOptional({
+    description: 'Stage relationship',
+    type: () => Stage,
+  })
+  @ManyToOne(() => Stage, (stage) => stage.matches, { nullable: true })
+  @JoinColumn({ name: 'stage_id' })
+  stage: Stage;
+
+  @ApiPropertyOptional({
+    description: 'Bracket type (for Double Elimination)',
+    example: 'WINNERS',
+  })
+  @Column({ name: 'bracket_type', length: 50, nullable: true })
+  bracketType: string;
+
+  @ApiPropertyOptional({
+    description: 'Group name (for Round Robin)',
+    example: 'Group A',
+  })
+  @Column({ name: 'group_name', length: 50, nullable: true })
+  groupName: string;
 
   @ApiProperty({
     description: 'Match name',

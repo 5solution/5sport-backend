@@ -11,6 +11,7 @@ import { MatchType } from '../enums/match-type.enum';
 import { RatingSource } from '../enums/rating-source.enum';
 import { Event } from './event.entity';
 import { TicketTier } from './ticket-tier.entity';
+import { Stage } from './stage.entity';
 
 @Entity('event_sessions')
 export class EventSession extends BaseEntityWithoutId {
@@ -74,4 +75,7 @@ export class EventSession extends BaseEntityWithoutId {
 
   @OneToMany(() => TicketTier, (tier) => tier.session)
   ticketTiers: TicketTier[];
+
+  @OneToMany(() => Stage, (stage) => stage.session)
+  stages: Stage[];
 }

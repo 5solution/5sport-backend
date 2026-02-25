@@ -5,6 +5,7 @@ export { EventSession } from './event-session.entity';
 export { TicketTier } from './ticket-tier.entity';
 export { EventCustomField, DB_MAPPING_FIELDS } from './event-custom-field.entity';
 export { EventBlacklist } from './event-blacklist.entity';
+export { Stage } from './stage.entity';
 export { Match } from './match.entity';
 export { MatchScore } from './match-score.entity';
 export { EventParticipant } from './event-participant.entity';
