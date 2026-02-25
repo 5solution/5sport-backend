@@ -17,19 +17,19 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { httpLogger } from './common/middlewares/logger.middleware';
 
 const setMiddleware = (app: NestExpressApplication) => {
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      crossOriginOpenerPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   app.enableCors({
     credentials: true,
-    origin: (_, callback) => callback(null, true),
-    allowedHeaders: [
-      '*',
-      'Authorization',
-      'Content-Type',
-      'X-Requested-With',
-      'Wallet-Address',
-      'wallet-address',
-    ],
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: '*',
   });
 
   app.use(httpLogger);

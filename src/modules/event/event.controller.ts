@@ -521,4 +521,32 @@ export class EventController {
   getBlacklist(@Param('id') id: string) {
     return this.eventService.getBlacklist(id);
   }
+
+  // ===== Media =====
+
+  @Post(':id/media')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ORGANIZER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add media to event' })
+  addMedia(
+    @Param('id') id: string,
+    @Body() body: { type: string; url: string; fileSize: number; mimeType: string },
+    @CurrentUser() user: any,
+  ) {
+    return this.eventService.addMedia(id, body as any, user.id, user.role);
+  }
+
+  @Delete(':id/media/:mediaId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ORGANIZER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete media from event' })
+  deleteMedia(
+    @Param('id') id: string,
+    @Param('mediaId') mediaId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.eventService.deleteMedia(id, mediaId, user.id, user.role);
+  }
 }
