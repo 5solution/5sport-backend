@@ -63,3 +63,8 @@ export const env = {
     bucketName: envVars.S3_BUCKET_NAME,
   },
 };
+
+console.log('Configuration loaded successfully:', {
+  env: env.env,
+  telegramBotToken: env.telegramBotToken ? '***' : null,
+});
