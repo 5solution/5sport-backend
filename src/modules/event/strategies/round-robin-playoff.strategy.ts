@@ -40,6 +40,7 @@ export class RoundRobinPlayoffStrategy implements IStageStrategy {
           matches.push({
             sessionId: stage.sessionId,
             stageId: stage.id,
+            stage: stage, 
             name: `${groupName} - Match ${matchNumber}`,
             matchNumber: matchNumber,
             round: 'Group Stage',
@@ -105,6 +106,7 @@ export class RoundRobinPlayoffStrategy implements IStageStrategy {
         playoffMatches.push({
           sessionId: stage.sessionId,
           stageId: stage.id,
+          stage: stage,
           name: `Playoff - Match ${i / 2 + 1}`,
           matchNumber: i / 2 + 1,
           round: 'Playoff',

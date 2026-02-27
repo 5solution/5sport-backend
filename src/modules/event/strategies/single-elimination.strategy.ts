@@ -39,6 +39,7 @@ export class SingleEliminationStrategy implements IStageStrategy {
       matches.push({
         sessionId: stage.sessionId,
         stageId: stage.id,
+        stage: stage,
         name: `${roundNames[0]} - Match ${matchNumber}`,
         matchNumber,
         round: roundNames[0],
@@ -59,6 +60,7 @@ export class SingleEliminationStrategy implements IStageStrategy {
         matches.push({
           sessionId: stage.sessionId,
           stageId: stage.id,
+          stage: stage,
           name: `${roundNames[round]} - Match ${matchNumber}`,
           matchNumber,
           round: roundNames[round],
@@ -71,10 +73,7 @@ export class SingleEliminationStrategy implements IStageStrategy {
     return matches;
   }
 
-  advanceWinners(
-    stage: Stage,
-    completedMatches: Match[],
-  ): Partial<Match>[] {
+  advanceWinners(stage: Stage, completedMatches: Match[]): Partial<Match>[] {
     // For single elimination, winners advance to next round matches
     // This is handled by updating existing placeholder matches with winner data
     return [];

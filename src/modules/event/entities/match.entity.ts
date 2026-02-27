@@ -13,6 +13,8 @@ import { EventSession } from './event-session.entity';
 import { Stage } from './stage.entity';
 import { Athlete } from 'src/modules/athlete/entities/athlete.entity';
 import { MatchScore } from './match-score.entity';
+import { Use } from 'nestjs-telegraf';
+import { User } from 'src/modules/user/user.entity';
 
 export enum MatchStatus {
   SCHEDULED = 'SCHEDULED',
@@ -44,7 +46,7 @@ export class Match extends BaseEntityWithoutId {
   session: EventSession;
 
   @ApiPropertyOptional({ description: 'Stage ID' })
-  @Column({ name: 'stage_id', nullable: true })
+  @Column({ name: 'stage_id', nullable: false })
   @Index()
   stageId: string;
 
@@ -52,7 +54,10 @@ export class Match extends BaseEntityWithoutId {
     description: 'Stage relationship',
     type: () => Stage,
   })
-  @ManyToOne(() => Stage, (stage) => stage.matches, { nullable: true })
+  @ManyToOne(() => Stage, (stage) => stage.matches, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'stage_id' })
   stage: Stage;
 
@@ -130,20 +135,40 @@ export class Match extends BaseEntityWithoutId {
   status: MatchStatus;
 
   @ApiPropertyOptional({ description: 'Team 1 Player 1 ID' })
-  @Column({ name: 'team1_player1_id', nullable: true })
+  @Column({ name: 'team1_player1_id', nullable: true, type: 'uuid' })
   team1Player1Id: string;
 
+  @ApiPropertyOptional({ type: () => Athlete })
+  @ManyToOne(() => Athlete, { nullable: true, eager: false })
+  @JoinColumn({ name: 'team1_player1_id' })
+  team1Player1: Athlete;
+
   @ApiPropertyOptional({ description: 'Team 1 Player 2 ID' })
-  @Column({ name: 'team1_player2_id', nullable: true })
+  @Column({ name: 'team1_player2_id', nullable: true, type: 'uuid' })
   team1Player2Id: string;
 
+  @ApiPropertyOptional({ type: () => Athlete })
+  @ManyToOne(() => Athlete, { nullable: true, eager: false })
+  @JoinColumn({ name: 'team1_player2_id' })
+  team1Player2: Athlete;
+
   @ApiPropertyOptional({ description: 'Team 2 Player 1 ID' })
-  @Column({ name: 'team2_player1_id', nullable: true })
+  @Column({ name: 'team2_player1_id', nullable: true, type: 'uuid' })
   team2Player1Id: string;
 
+  @ApiPropertyOptional({ type: () => Athlete })
+  @ManyToOne(() => Athlete, { nullable: true, eager: false })
+  @JoinColumn({ name: 'team2_player1_id' })
+  team2Player1: Athlete;
+
   @ApiPropertyOptional({ description: 'Team 2 Player 2 ID' })
-  @Column({ name: 'team2_player2_id', nullable: true })
+  @Column({ name: 'team2_player2_id', nullable: true, type: 'uuid' })
   team2Player2Id: string;
+
+  @ApiPropertyOptional({ type: () => Athlete })
+  @ManyToOne(() => Athlete, { nullable: true, eager: false })
+  @JoinColumn({ name: 'team2_player2_id' })
+  team2Player2: Athlete;
 
   @ApiPropertyOptional({
     description: 'Team 1 name',

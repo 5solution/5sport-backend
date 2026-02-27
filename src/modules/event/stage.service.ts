@@ -77,6 +77,15 @@ export class StageService {
     await this.stageRepository.remove(stage);
   }
 
+  async findMatchesByStage(stageId: string): Promise<Match[]> {
+    await this.findOne(stageId); // ensure stage exists
+    return await this.matchRepository.find({
+      where: { stageId },
+      relations: ['team1Player1', 'team2Player1'],
+      order: { matchNumber: 'ASC' },
+    });
+  }
+
   async generateMatches(stageId: string): Promise<Match[]> {
     const stage = await this.findOne(stageId);
 
@@ -104,13 +113,16 @@ export class StageService {
     const strategy = this.stageFactory.getStrategy(stage.stageType);
     const matchData = strategy.generateMatches(stage, participants);
 
-    // Save generated matches
-    const matches = this.matchRepository.create(matchData);
+    console.log('Generated matches:', matchData);
+
+    // Save generated matches — use plain stage reference to avoid TypeORM relation graph issues
+    const matches = this.matchRepository.create(
+      matchData.map((m) => ({ ...m, stage: { id: stage.id } as Stage })),
+    );
     const savedMatches = await this.matchRepository.save(matches);
 
-    // Update stage status to READY
-    stage.status = StageStatus.READY;
-    await this.stageRepository.save(stage);
+    // Update stage status to READY — use update() to avoid TypeORM reconciling the matches relation
+    await this.stageRepository.update(stage.id, { status: StageStatus.READY });
 
     return savedMatches;
   }

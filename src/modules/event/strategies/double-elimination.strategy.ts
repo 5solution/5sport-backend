@@ -38,6 +38,7 @@ export class DoubleEliminationStrategy implements IStageStrategy {
       matches.push({
         sessionId: stage.sessionId,
         stageId: stage.id,
+        stage: stage,
         name: `Winners R1 - Match ${matchNumber}`,
         matchNumber,
         round: 'Winners Round 1',
@@ -59,6 +60,7 @@ export class DoubleEliminationStrategy implements IStageStrategy {
         matches.push({
           sessionId: stage.sessionId,
           stageId: stage.id,
+          stage: stage,
           name: `Winners R${round} - Match ${matchNumber}`,
           matchNumber,
           round: `Winners Round ${round}`,
@@ -80,6 +82,7 @@ export class DoubleEliminationStrategy implements IStageStrategy {
         matches.push({
           sessionId: stage.sessionId,
           stageId: stage.id,
+          stage: stage,
           name: `Losers R${round} - Match ${matchNumber}`,
           matchNumber,
           round: `Losers Round ${round}`,
@@ -94,6 +97,7 @@ export class DoubleEliminationStrategy implements IStageStrategy {
     matches.push({
       sessionId: stage.sessionId,
       stageId: stage.id,
+      stage: stage,
       name: `Grand Final - Match ${matchNumber}`,
       matchNumber,
       round: 'Grand Final',
@@ -104,10 +108,7 @@ export class DoubleEliminationStrategy implements IStageStrategy {
     return matches;
   }
 
-  advanceWinners(
-    stage: Stage,
-    completedMatches: Match[],
-  ): Partial<Match>[] {
+  advanceWinners(stage: Stage, completedMatches: Match[]): Partial<Match>[] {
     // Winners advance in winners bracket, losers drop to losers bracket
     // Handled by updating existing placeholder matches
     return [];

@@ -116,6 +116,21 @@ export class StageController {
     return await this.stageService.remove(stageId);
   }
 
+  @Get('stages/:stageId/matches')
+  @ApiOperation({ summary: 'Get all matches for a stage' })
+  @ApiParam({ name: 'eventId', description: 'Event ID' })
+  @ApiParam({ name: 'stageId', description: 'Stage ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all matches for the stage',
+    type: [Match],
+  })
+  async findMatchesByStage(
+    @Param('stageId', ParseUUIDPipe) stageId: string,
+  ): Promise<Match[]> {
+    return await this.stageService.findMatchesByStage(stageId);
+  }
+
   @Post('stages/:stageId/generate-matches')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.ORGANIZER)
