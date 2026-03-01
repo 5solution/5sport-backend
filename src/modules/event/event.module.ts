@@ -15,6 +15,7 @@ import { EventParticipant } from './entities/event-participant.entity';
 import { Stage } from './entities/stage.entity';
 
 import { EventController } from './event.controller';
+import { PublicEventController } from './public-event.controller';
 import { MatchController } from './match.controller';
 import { ParticipantController } from './participant.controller';
 import { StageController } from './stage.controller';
@@ -48,6 +49,7 @@ import { FlexStrategy } from './strategies/flex.strategy';
   ],
   controllers: [
     EventController,
+    PublicEventController,
     MatchController,
     ParticipantController,
     StageController,

@@ -5,11 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, LessThanOrEqual, Repository } from 'typeorm';
+import { ILike, In, LessThan, LessThanOrEqual, Repository } from 'typeorm';
 import {
   PaginatedResponseDto,
   PaginationQueryDto,
 } from 'src/common/dto/pagination.dto';
+import { PublicEventQueryDto } from './dto/public-event-query.dto';
 import { Role } from 'src/common/enums/role.enum';
 
 import { Event } from './entities/event.entity';
@@ -121,6 +122,29 @@ export class EventService {
       skip,
       take: limit,
       order: { created_at: 'DESC' },
+    });
+
+    return new PaginatedResponseDto(events, total, page, limit);
+  }
+
+  async findPublic(
+    query: PublicEventQueryDto,
+  ): Promise<PaginatedResponseDto<Event>> {
+    const { page = 1, limit = 10, sportType, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      status: In([EventStatus.PUBLISHED, EventStatus.LIVE]),
+    };
+
+    if (sportType) where.sportType = sportType;
+    if (search) where.name = ILike(`%${search}%`);
+
+    const [events, total] = await this.eventRepo.findAndCount({
+      where,
+      skip,
+      take: limit,
+      order: { eventStartTime: 'ASC' },
     });
 
     return new PaginatedResponseDto(events, total, page, limit);
