@@ -84,7 +84,10 @@ export class EventController {
     description: 'Danh sách sự kiện',
     schema: {
       properties: {
-        data: { type: 'array', items: { $ref: '#/components/schemas/EventResponseDto' } },
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/EventResponseDto' },
+        },
         meta: { type: 'object' },
       },
     },
@@ -531,7 +534,8 @@ export class EventController {
   @ApiOperation({ summary: 'Add media to event' })
   addMedia(
     @Param('id') id: string,
-    @Body() body: { type: string; url: string; fileSize: number; mimeType: string },
+    @Body()
+    body: { type: string; url: string; fileSize: number; mimeType: string },
     @CurrentUser() user: any,
   ) {
     return this.eventService.addMedia(id, body as any, user.id, user.role);
