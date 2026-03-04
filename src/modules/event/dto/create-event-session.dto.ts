@@ -11,7 +11,7 @@ import {
   MaxLength,
   ValidateIf,
 } from 'class-validator';
-import { MatchType } from '../enums/match-type.enum';
+import { CompetitionFormat } from '../enums/competition-format.enum';
 import { RatingSource } from '../enums/rating-source.enum';
 
 export class CreateEventSessionDto {
@@ -25,18 +25,19 @@ export class CreateEventSessionDto {
   name: string;
 
   @ApiProperty({
-    description: 'Thể thức thi đấu',
-    enum: MatchType,
-    example: MatchType.SINGLES,
+    description: 'Thể thức thi đấu: Đơn (SINGLES) hoặc Đôi (DOUBLES)',
+    enum: CompetitionFormat,
+    example: CompetitionFormat.SINGLES,
   })
-  @IsEnum(MatchType)
-  matchType: MatchType;
+  @IsEnum(CompetitionFormat)
+  competitionFormat: CompetitionFormat;
 
   @ApiPropertyOptional({
-    description: 'Yêu cầu có đối thủ/đồng đội (chỉ với Doubles)',
-    example: true,
+    description: 'Yêu cầu đăng ký theo cặp (partner) — chỉ áp dụng khi DOUBLES',
+    example: false,
     default: false,
   })
+  @ValidateIf((o) => o.competitionFormat === CompetitionFormat.DOUBLES)
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)

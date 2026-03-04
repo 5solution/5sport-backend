@@ -15,8 +15,25 @@ import { User } from 'src/modules/user/user.entity';
 
 export enum ParticipantStatus {
   REGISTERED = 'REGISTERED',
+  /** Đôi: đã thanh toán vé lẻ, nhờ BTC ghép cặp hộ */
+  FINDING_PARTNER = 'FINDING_PARTNER',
+  /** Đôi: đã gửi lời mời, chờ VĐV B xác nhận */
+  WAITING_PARTNER = 'WAITING_PARTNER',
+  /** Vé hợp lệ — Đôi: đủ 2 xác nhận | Đơn: thanh toán xong */
+  PAIRED = 'PAIRED',
+  /** Đã quét QR tại sân (Đôi ghi nhận x/2) */
   CHECKED_IN = 'CHECKED_IN',
+  /** Đã check-in đầy đủ quân số — đủ điều kiện xếp lịch thi đấu */
+  READY = 'READY',
+  /** Đang thi đấu — khóa sửa đổi thông tin */
+  PLAYING = 'PLAYING',
+  /** Đã thua, kết thúc giải đấu */
+  ELIMINATED = 'ELIMINATED',
+  /** Thắng chung kết tổng */
+  WINNER = 'WINNER',
+  /** Rút lui */
   WITHDRAWN = 'WITHDRAWN',
+  /** Bị truất quyền thi đấu */
   DISQUALIFIED = 'DISQUALIFIED',
 }
 
@@ -110,12 +127,12 @@ export class EventParticipant extends BaseEntityWithoutId {
   @ApiProperty({
     description: 'Participant status',
     enum: ParticipantStatus,
-    example: ParticipantStatus.REGISTERED,
+    example: ParticipantStatus.PAIRED,
   })
   @Column({
     type: 'enum',
     enum: ParticipantStatus,
-    default: ParticipantStatus.REGISTERED,
+    default: ParticipantStatus.PAIRED,
   })
   @Index()
   status: ParticipantStatus;
@@ -126,6 +143,13 @@ export class EventParticipant extends BaseEntityWithoutId {
   })
   @Column({ name: 'bib_number', nullable: true })
   bibNumber: string;
+
+  @ApiPropertyOptional({
+    description: 'Seed number (set by admin)',
+    example: 1,
+  })
+  @Column({ nullable: true, type: 'int' })
+  seed: number;
 
   @ApiPropertyOptional({
     description: 'Custom data from event custom fields',

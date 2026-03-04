@@ -1,4 +1,5 @@
 export * from './blacklist-type.enum';
+export * from './competition-format.enum';
 export * from './event-status.enum';
 export * from './field-type.enum';
 export * from './match-type.enum';

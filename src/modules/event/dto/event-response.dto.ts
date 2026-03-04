@@ -229,10 +229,10 @@ export class SessionResponseDto {
   name: string;
 
   @ApiProperty({
-    description: 'Thể thức (SINGLES/DOUBLES)',
+    description: 'Thể thức thi đấu (SINGLES/DOUBLES)',
     example: 'SINGLES',
   })
-  matchType: string;
+  competitionFormat: string;
 
   @ApiProperty({
     description: 'Yêu cầu partner',

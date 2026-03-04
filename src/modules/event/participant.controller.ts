@@ -76,6 +76,21 @@ export class ParticipantController {
     return await this.participantService.getCheckedInParticipants(eventId);
   }
 
+  @Get('stage/:stageId')
+  @ApiOperation({ summary: 'Get participants by stage' })
+  @ApiParam({ name: 'eventId', description: 'Event ID' })
+  @ApiParam({ name: 'stageId', description: 'Stage ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns participants belonging to the stage session',
+    type: [EventParticipant],
+  })
+  async findByStage(
+    @Param('stageId', ParseUUIDPipe) stageId: string,
+  ): Promise<EventParticipant[]> {
+    return this.participantService.findAllByStage(stageId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get participant by ID' })
   @ApiParam({ name: 'eventId', description: 'Event ID' })
@@ -125,6 +140,43 @@ export class ParticipantController {
     @CurrentUser() user: User,
   ): Promise<EventParticipant> {
     return await this.participantService.withdraw(id, user.id);
+  }
+
+  @Patch(':id/partner')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ORGANIZER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Assign partner for a doubles participant' })
+  @ApiParam({ name: 'eventId', description: 'Event ID' })
+  @ApiParam({ name: 'id', description: 'Participant ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Partner assigned — both participants updated to PAIRED',
+    type: EventParticipant,
+  })
+  async assignPartner(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('partnerParticipantId', ParseUUIDPipe) partnerParticipantId: string,
+  ): Promise<EventParticipant> {
+    return this.participantService.assignPartner(id, partnerParticipantId);
+  }
+
+  @Delete(':id/partner')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ORGANIZER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Remove partner from a doubles participant' })
+  @ApiParam({ name: 'eventId', description: 'Event ID' })
+  @ApiParam({ name: 'id', description: 'Participant ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Partner removed — both participants reverted to FINDING_PARTNER',
+    type: EventParticipant,
+  })
+  async removePartner(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<EventParticipant> {
+    return this.participantService.removePartner(id);
   }
 
   @Patch(':id/bib')

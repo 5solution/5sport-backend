@@ -36,7 +36,7 @@ import { SetBlacklistDto } from './dto/blacklist.dto';
 import { ReorderDto } from './dto/reorder.dto';
 
 import { EventStatus } from './enums/event-status.enum';
-import { MatchType } from './enums/match-type.enum';
+import { CompetitionFormat } from './enums/competition-format.enum';
 
 import { validateTimeline } from './validators/timeline.validator';
 import { validateScoringConfig } from './validators/scoring-config.validator';
@@ -406,7 +406,7 @@ export class EventService {
       throw new BadRequestException('Mã vé đã tồn tại trong sự kiện này.');
     }
 
-    if (dto.matchType === MatchType.SINGLES) {
+    if (dto.competitionFormat === CompetitionFormat.SINGLES) {
       dto.requirePartner = false;
     }
 

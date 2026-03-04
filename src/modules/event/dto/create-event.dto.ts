@@ -13,6 +13,7 @@ import {
 import { SportType } from '../enums/sport-type.enum';
 import { PaymentMethod } from '../enums/payment-method.enum';
 
+
 export class CreateEventDto {
   @ApiProperty({
     description: 'Tên sự kiện',
@@ -100,16 +101,6 @@ export class CreateEventDto {
   @IsBoolean()
   @Type(() => Boolean)
   allowTransfer?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Yêu cầu đăng ký theo cặp (partner)',
-    example: false,
-    default: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
-  requirePartner?: boolean;
 
   @ApiProperty({
     description: 'Thời gian bắt đầu sự kiện (ISO 8601)',

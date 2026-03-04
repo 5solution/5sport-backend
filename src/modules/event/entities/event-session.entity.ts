@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BaseEntityWithoutId } from 'src/utils/base/base-entity';
-import { MatchType } from '../enums/match-type.enum';
+import { CompetitionFormat } from '../enums/competition-format.enum';
 import { RatingSource } from '../enums/rating-source.enum';
 import { Event } from './event.entity';
 import { TicketTier } from './ticket-tier.entity';
@@ -28,8 +28,8 @@ export class EventSession extends BaseEntityWithoutId {
   @Column({ length: 256 })
   name: string;
 
-  @Column({ name: 'match_type', type: 'enum', enum: MatchType })
-  matchType: MatchType;
+  @Column({ name: 'competition_format', type: 'enum', enum: CompetitionFormat })
+  competitionFormat: CompetitionFormat;
 
   @Column({ name: 'require_partner', default: false })
   requirePartner: boolean;
