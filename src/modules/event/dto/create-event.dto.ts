@@ -101,6 +101,16 @@ export class CreateEventDto {
   @Type(() => Boolean)
   allowTransfer?: boolean;
 
+  @ApiPropertyOptional({
+    description: 'Yêu cầu đăng ký theo cặp (partner)',
+    example: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  requirePartner?: boolean;
+
   @ApiProperty({
     description: 'Thời gian bắt đầu sự kiện (ISO 8601)',
     example: '2026-03-01T08:00:00Z',

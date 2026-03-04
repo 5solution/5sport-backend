@@ -59,6 +59,9 @@ export class Event extends BaseEntityWithoutId {
   @Column({ name: 'allow_transfer', default: true })
   allowTransfer: boolean;
 
+  @Column({ name: 'require_partner', default: false })
+  requirePartner: boolean;
+
   @Column({ type: 'enum', enum: EventStatus, default: EventStatus.DRAFT })
   status: EventStatus;
 
