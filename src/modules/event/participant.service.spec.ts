@@ -5,6 +5,8 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ParticipantService } from './participant.service';
 import { EventParticipant } from './entities';
 import { ParticipantStatus } from './entities/event-participant.entity';
+import { Stage } from './entities/stage.entity';
+import { EventSession } from './entities/event-session.entity';
 
 describe('ParticipantService', () => {
   let service: ParticipantService;
@@ -19,6 +21,14 @@ describe('ParticipantService', () => {
     remove: vi.fn(),
   };
 
+  const mockStageRepository = {
+    findOne: vi.fn(),
+  };
+
+  const mockSessionRepository = {
+    findOne: vi.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,6 +36,14 @@ describe('ParticipantService', () => {
         {
           provide: getRepositoryToken(EventParticipant),
           useValue: mockParticipantRepository,
+        },
+        {
+          provide: getRepositoryToken(Stage),
+          useValue: mockStageRepository,
+        },
+        {
+          provide: getRepositoryToken(EventSession),
+          useValue: mockSessionRepository,
         },
       ],
     }).compile();
