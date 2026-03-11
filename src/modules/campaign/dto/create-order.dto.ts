@@ -1,9 +1,13 @@
-import { IsString, IsOptional, IsArray, ValidateNested, IsEnum, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested, IsEnum, IsDateString, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SizeShirt } from '../enums/size-shirt.enum';
 
 export class AthleteInfoDto {
+  @ApiProperty({ example: 5, description: 'Cự ly đăng ký (km)' })
+  @IsNumber()
+  distance: number;
+
   @ApiProperty({ description: 'Họ và tên đệm' })
   @IsString()
   lastName: string;
@@ -77,18 +81,6 @@ export class AthleteInfoDto {
   bloodType?: string;
 }
 
-export class OrderItemDto {
-  @ApiProperty({ description: 'ID sản phẩm (cự ly)' })
-  @IsString()
-  productId: string;
-
-  @ApiProperty({ type: [AthleteInfoDto], description: 'Danh sách vận động viên' })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => AthleteInfoDto)
-  athletes: AthleteInfoDto[];
-}
-
 export class CreateOrderDto {
   @ApiProperty({ description: 'Họ và tên đệm' })
   @IsString()
@@ -107,9 +99,9 @@ export class CreateOrderDto {
   @IsString()
   phoneNumber: string;
 
-  @ApiProperty({ type: [OrderItemDto], description: 'Danh sách sản phẩm và vận động viên' })
+  @ApiProperty({ type: [AthleteInfoDto], description: 'Danh sách vận động viên' })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => OrderItemDto)
-  items: OrderItemDto[];
+  @Type(() => AthleteInfoDto)
+  athletes: AthleteInfoDto[];
 }

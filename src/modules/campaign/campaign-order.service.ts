@@ -1,31 +1,35 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CampaignOrder, CampaignOrderDocument } from './schemas/campaign-order.schema';
+import { Campaign, CampaignDocument } from './schemas/campaign.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
-import { CampaignProductService } from './campaign-product.service';
 
 @Injectable()
 export class CampaignOrderService {
   constructor(
     @InjectModel(CampaignOrder.name) private orderModel: Model<CampaignOrderDocument>,
-    private productService: CampaignProductService,
+    @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
   ) {}
 
   async create(campaignId: string, dto: CreateOrderDto): Promise<CampaignOrderDocument> {
-    const items: any[] = [];
+    const campaign = await this.campaignModel.findById(campaignId);
+    if (!campaign) throw new NotFoundException('Campaign not found');
+
+    const athletes: any[] = [];
     let totalAmount = 0;
 
-    for (const item of dto.items) {
-      const product = await this.productService.findProductOrFail(campaignId, item.productId);
-      const unitPrice = await this.productService.getCurrentPrice(item.productId);
-      totalAmount += unitPrice * item.athletes.length;
-      items.push({
-        productId: new Types.ObjectId(item.productId),
-        productName: product.name,
+    for (const athlete of dto.athletes) {
+      const distanceConfig = campaign.distances.find((d) => d.distance === athlete.distance);
+      if (!distanceConfig) {
+        throw new BadRequestException(`Cự ly ${athlete.distance}km không tồn tại trong campaign`);
+      }
+      const unitPrice = distanceConfig.price;
+      totalAmount += unitPrice;
+      athletes.push({
+        ...athlete,
         unitPrice,
-        athletes: item.athletes,
       });
     }
 
@@ -39,7 +43,7 @@ export class CampaignOrderService {
       totalAmount,
       discountAmount: 0,
       finalAmount: totalAmount,
-      items,
+      athletes,
       orderDate: new Date(),
     });
 
@@ -54,8 +58,8 @@ export class CampaignOrderService {
       if (query.fromDate) filter.orderDate.$gte = new Date(query.fromDate);
       if (query.toDate) filter.orderDate.$lte = new Date(query.toDate);
     }
-    if (query.productId) {
-      filter['items.productId'] = new Types.ObjectId(query.productId);
+    if (query.distance) {
+      filter['athletes.distance'] = query.distance;
     }
 
     const page = Number(query.page) || 1;

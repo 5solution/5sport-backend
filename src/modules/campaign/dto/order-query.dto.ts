@@ -1,6 +1,7 @@
-import { IsOptional, IsEnum, IsDateString, IsString } from 'class-validator';
+import { IsOptional, IsEnum, IsDateString, IsNumber } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CampaignOrderStatus } from '../enums/campaign-order-status.enum';
+import { Type } from 'class-transformer';
 
 export class OrderQueryDto {
   @ApiPropertyOptional({ enum: CampaignOrderStatus })
@@ -8,10 +9,11 @@ export class OrderQueryDto {
   @IsEnum(CampaignOrderStatus)
   paymentStatus?: CampaignOrderStatus;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Lọc theo cự ly (km)' })
   @IsOptional()
-  @IsString()
-  productId?: string;
+  @Type(() => Number)
+  @IsNumber()
+  distance?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

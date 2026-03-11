@@ -30,6 +30,30 @@ export class Campaign {
   @Prop({ type: String, enum: CampaignStatus, default: CampaignStatus.DRAFT, index: true })
   status: CampaignStatus;
 
+  @Prop({
+    type: [{ distance: Number, price: Number }],
+    default: [],
+  })
+  distances: { distance: number; price: number }[];
+
+  @Prop()
+  groupName: string;
+
+  @Prop()
+  groupLeader: string;
+
+  @Prop()
+  zaloGroupUrl: string;
+
+  @Prop()
+  hotline: string;
+
+  @Prop()
+  regulationsUrl: string;
+
+  @Prop()
+  fanpageUrl: string;
+
   @Prop({ type: Object })
   paymentConfig: Record<string, any>;
 }

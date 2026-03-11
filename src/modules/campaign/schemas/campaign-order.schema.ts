@@ -4,6 +4,8 @@ import { CampaignOrderStatus } from '../enums/campaign-order-status.enum';
 import { SizeShirt } from '../enums/size-shirt.enum';
 
 export class AthleteInfo {
+  distance: number;
+  unitPrice: number;
   lastName: string;
   firstName: string;
   phoneNumber: string;
@@ -19,13 +21,6 @@ export class AthleteInfo {
   medicalInformation: string;
   typeOfMedicine: string;
   bloodType: string;
-}
-
-export class OrderItem {
-  productId: Types.ObjectId;
-  productName: string;
-  unitPrice: number;
-  athletes: AthleteInfo[];
 }
 
 export type CampaignOrderDocument = HydratedDocument<CampaignOrder>;
@@ -71,33 +66,28 @@ export class CampaignOrder {
   @Prop({
     type: [
       {
-        productId: { type: Types.ObjectId, ref: 'CampaignProduct' },
-        productName: String,
+        distance: Number,
         unitPrice: Number,
-        athletes: [
-          {
-            lastName: String,
-            firstName: String,
-            phoneNumber: String,
-            location: String,
-            national: String,
-            provinceCode: String,
-            dateOfBirth: Date,
-            sizeShirt: { type: String, enum: SizeShirt },
-            club: String,
-            nameInBib: String,
-            medicalInformationPhoneNumber: String,
-            medicalInformationName: String,
-            medicalInformation: String,
-            typeOfMedicine: String,
-            bloodType: String,
-          },
-        ],
+        lastName: String,
+        firstName: String,
+        phoneNumber: String,
+        location: String,
+        national: String,
+        provinceCode: String,
+        dateOfBirth: Date,
+        sizeShirt: { type: String, enum: SizeShirt },
+        club: String,
+        nameInBib: String,
+        medicalInformationPhoneNumber: String,
+        medicalInformationName: String,
+        medicalInformation: String,
+        typeOfMedicine: String,
+        bloodType: String,
       },
     ],
     required: true,
   })
-  items: OrderItem[];
+  athletes: AthleteInfo[];
 
   @Prop({ required: true, default: Date.now, index: true })
   orderDate: Date;
