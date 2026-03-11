@@ -1,6 +1,15 @@
-import { Controller, Get, Post, Body, Param, Delete, Query } from '@nestjs/common';
-import { PaymentsService } from './payments.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
+
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { PaymentsService } from './payments.service';
 
 @Controller('payments')
 export class PaymentsController {
@@ -29,12 +38,18 @@ export class PaymentsController {
   }
 
   @Get(':paymentMethod/return')
-  verifyReturn(@Param('paymentMethod') paymentMethod: string, @Query() queryParams: any) {
+  verifyReturn(
+    @Param('paymentMethod') paymentMethod: string,
+    @Query() queryParams: any,
+  ) {
     return this.paymentsService.verifyPaymentReturn(paymentMethod, queryParams);
   }
 
   @Post(':paymentMethod/callback')
-  handleCallback(@Param('paymentMethod') paymentMethod: string, @Body() callbackData: any) {
+  handleCallback(
+    @Param('paymentMethod') paymentMethod: string,
+    @Body() callbackData: any,
+  ) {
     return this.paymentsService.handleCallback(paymentMethod, callbackData);
   }
 
