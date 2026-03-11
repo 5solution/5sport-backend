@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CampaignProductService } from './campaign-product.service';
 import { CreateCampaignProductDto } from './dto/create-campaign-product.dto';
 import { UpdateCampaignProductDto } from './dto/update-campaign-product.dto';
 import { CreatePricingPhaseDto } from './dto/create-pricing-phase.dto';
 import { UpdatePricingPhaseDto } from './dto/update-pricing-phase.dto';
+import { CampaignProductResponseDto } from './dto/campaign-product-response.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -25,6 +26,8 @@ export class CampaignProductController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Lấy danh sách sản phẩm của chiến dịch (public)' })
+  @ApiResponse({ status: 200, type: [CampaignProductResponseDto] })
   findProducts(@Param('campaignId') campaignId: string) {
     return this.productService.findProducts(campaignId);
   }

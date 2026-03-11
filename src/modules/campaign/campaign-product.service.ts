@@ -23,8 +23,38 @@ export class CampaignProductService {
     return product.save();
   }
 
-  async findProducts(campaignId: string): Promise<CampaignProductDocument[]> {
-    return this.productModel.find({ campaignId: new Types.ObjectId(campaignId) }).sort({ sortOrder: 1 });
+  async findProducts(campaignId: string) {
+    const products = await this.productModel
+      .find({ campaignId: new Types.ObjectId(campaignId) })
+      .sort({ sortOrder: 1 });
+
+    const now = new Date();
+    const productIds = products.map((p) => p._id);
+
+    const activePhases = await this.phaseModel
+      .find({
+        productId: { $in: productIds },
+        startTime: { $lte: now },
+        endTime: { $gte: now },
+      })
+      .sort({ sortOrder: 1 });
+
+    // Map productId → first active phase (lowest sortOrder)
+    const activePhaseMap = new Map<string, CampaignPricingPhaseDocument>();
+    for (const phase of activePhases) {
+      const key = phase.productId.toString();
+      if (!activePhaseMap.has(key)) activePhaseMap.set(key, phase);
+    }
+
+    return products.map((product) => {
+      const active = activePhaseMap.get(product._id.toString());
+      return {
+        ...product.toObject(),
+        currentPrice: active ? active.price : product.originalPrice,
+        activePhaseName: active ? active.name : null,
+        activePhaseId: active ? active._id : null,
+      };
+    });
   }
 
   async updateProduct(campaignId: string, productId: string, user: any, dto: UpdateCampaignProductDto): Promise<CampaignProductDocument> {
