@@ -26,6 +26,9 @@ const envVarsSchema = Joi.object()
     AWS_REGION: Joi.string().required(),
 
     S3_BUCKET_NAME: Joi.string().required(),
+
+    MONGODB_URI: Joi.string().uri().default('mongodb://localhost:27017'),
+    MONGODB_DB_NAME: Joi.string().default('5sport_campaign'),
   })
   .unknown();
 
@@ -61,6 +64,10 @@ export const env = {
     secretKey: envVars.AWS_SECRET_KEY,
     region: envVars.AWS_REGION,
     bucketName: envVars.S3_BUCKET_NAME,
+  },
+  mongodb: {
+    uri: envVars.MONGODB_URI,
+    dbName: envVars.MONGODB_DB_NAME,
   },
 };
 

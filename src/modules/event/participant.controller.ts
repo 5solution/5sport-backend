@@ -15,6 +15,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiBody,
 } from '@nestjs/swagger';
 import { ParticipantService } from './participant.service';
 import { CreateParticipantDto } from './dto/participant/create-participant.dto';
@@ -149,6 +150,21 @@ export class ParticipantController {
   @ApiOperation({ summary: 'Assign partner for a doubles participant' })
   @ApiParam({ name: 'eventId', description: 'Event ID' })
   @ApiParam({ name: 'id', description: 'Participant ID' })
+  @ApiBody({
+    description: 'Partner participant ID',
+    schema: {
+      type: 'object',
+      properties: {
+        partnerParticipantId: {
+          type: 'string',
+          format: 'uuid',
+          description: 'UUID of the partner participant',
+          example: '550e8400-e29b-41d4-a716-446655440000',
+        },
+      },
+      required: ['partnerParticipantId'],
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Partner assigned — both participants updated to PAIRED',

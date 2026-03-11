@@ -19,7 +19,7 @@ import { EventBlacklist } from './entities/event-blacklist.entity';
 import { EventStatus } from './enums/event-status.enum';
 import { SportType } from './enums/sport-type.enum';
 import { PaymentMethod } from './enums/payment-method.enum';
-import { MatchType } from './enums/match-type.enum';
+import { CompetitionFormat } from './enums/competition-format.enum';
 import { FieldType } from './enums/field-type.enum';
 import { Role } from 'src/common/enums/role.enum';
 
@@ -531,7 +531,7 @@ describe('EventService', () => {
         'e1',
         {
           name: 'Đơn Nam',
-          matchType: MatchType.SINGLES,
+          competitionFormat: CompetitionFormat.SINGLES,
           startTime: '2026-03-01T08:00:00Z',
           endTime: '2026-03-01T18:00:00Z',
           ticketCode: 'abc',
@@ -552,7 +552,7 @@ describe('EventService', () => {
           'e1',
           {
             name: 'Đơn Nam',
-            matchType: MatchType.SINGLES,
+            competitionFormat: CompetitionFormat.SINGLES,
             startTime: '2026-03-01T08:00:00Z',
             endTime: '2026-03-01T18:00:00Z',
             ticketCode: 'ABC',
@@ -568,7 +568,7 @@ describe('EventService', () => {
 
       const dto = {
         name: 'Đơn',
-        matchType: MatchType.SINGLES,
+        competitionFormat: CompetitionFormat.SINGLES,
         startTime: '2026-03-01T08:00:00Z',
         endTime: '2026-03-01T18:00:00Z',
         ticketCode: 'DNM',
