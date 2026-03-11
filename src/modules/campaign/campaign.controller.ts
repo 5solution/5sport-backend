@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { CampaignService } from './campaign.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 import { UpdateCampaignStatusDto } from './dto/update-campaign-status.dto';
+import { CampaignPublicResponseDto } from './dto/campaign-public-response.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -33,11 +34,22 @@ export class CampaignController {
   }
 
   @Get('public')
+  @ApiResponse({
+    status: 200,
+    description: 'Danh sách chiến dịch công khai (ACTIVE/CLOSED)',
+    type: CampaignPublicResponseDto,
+    isArray: true,
+  })
   findPublic(@Query() query: PaginationQueryDto) {
     return this.campaignService.findPublic(query);
   }
 
   @Get('public/:slug')
+  @ApiResponse({
+    status: 200,
+    description: 'Chi tiết chiến dịch công khai',
+    type: CampaignPublicResponseDto,
+  })
   findBySlug(@Param('slug') slug: string) {
     return this.campaignService.findBySlug(slug);
   }

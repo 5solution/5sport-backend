@@ -5,6 +5,7 @@ import { Campaign, CampaignDocument } from './schemas/campaign.schema';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 import { UpdateCampaignStatusDto } from './dto/update-campaign-status.dto';
+import { CampaignPublicResponseDto } from './dto/campaign-public-response.dto';
 import { CampaignStatus } from './enums/campaign-status.enum';
 import { Role } from 'src/common/enums/role.enum';
 import { PaginatedResponseDto, PaginationQueryDto } from 'src/common/dto/pagination.dto';
@@ -36,7 +37,7 @@ export class CampaignService {
     return campaign;
   }
 
-  async findPublic(query: PaginationQueryDto): Promise<PaginatedResponseDto<CampaignDocument>> {
+  async findPublic(query: PaginationQueryDto): Promise<PaginatedResponseDto<CampaignPublicResponseDto>> {
     const filter = { status: { $in: [CampaignStatus.ACTIVE, CampaignStatus.CLOSED] } };
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
@@ -47,16 +48,17 @@ export class CampaignService {
       this.campaignModel.countDocuments(filter),
     ]);
 
-    return new PaginatedResponseDto(data, total, page, limit);
+    const publicData = data.map((campaign) => this.toCampaignPublicResponse(campaign));
+    return new PaginatedResponseDto(publicData, total, page, limit);
   }
 
-  async findBySlug(slug: string): Promise<CampaignDocument> {
+  async findBySlug(slug: string): Promise<CampaignPublicResponseDto> {
     const campaign = await this.campaignModel.findOne({
       slug,
       status: { $in: [CampaignStatus.ACTIVE, CampaignStatus.CLOSED] },
     });
     if (!campaign) throw new NotFoundException('Campaign not found');
-    return campaign;
+    return this.toCampaignPublicResponse(campaign);
   }
 
   async update(id: string, user: any, dto: UpdateCampaignDto): Promise<CampaignDocument> {
@@ -90,5 +92,28 @@ export class CampaignService {
     if (user.role !== Role.ADMIN && campaign.creatorId !== user.id) {
       throw new ForbiddenException('You do not own this campaign');
     }
+  }
+
+  private toCampaignPublicResponse(campaign: CampaignDocument): CampaignPublicResponseDto {
+    const obj = campaign.toObject() as any;
+    return {
+      id: obj._id.toString(),
+      name: obj.name,
+      slug: obj.slug,
+      description: obj.description,
+      bannerUrl: obj.bannerUrl,
+      startTime: obj.startTime,
+      endTime: obj.endTime,
+      status: obj.status,
+      distances: obj.distances || [],
+      groupName: obj.groupName,
+      groupLeader: obj.groupLeader,
+      zaloGroupUrl: obj.zaloGroupUrl,
+      hotline: obj.hotline,
+      regulationsUrl: obj.regulationsUrl,
+      fanpageUrl: obj.fanpageUrl,
+      createdAt: obj.createdAt,
+      updatedAt: obj.updatedAt,
+    };
   }
 }

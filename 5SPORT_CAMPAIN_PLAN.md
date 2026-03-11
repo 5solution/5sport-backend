@@ -2,9 +2,9 @@
 
 ## Tổng quan
 
-Module **Campaign (Chiến dịch Gom vé)** cho phép Admin/Trưởng nhóm tạo chiến dịch gom vé, quản lý sản phẩm (vé theo cự ly), cấu hình giá theo giai đoạn, áp dụng giảm giá, và quản lý đơn hàng tập trung.
+Module **Campaign (Chiến dịch Gom vé)** cho phép Admin/Organizer tạo chiến dịch gom vé, quản lý cự ly và giá trực tiếp trên campaign, áp dụng giảm giá, quản lý custom fields cho form đăng ký, và quản lý đơn hàng tập trung.
 
-> **Database**: Module này dùng **MongoDB** (Mongoose) độc lập với PostgreSQL của hệ thống chính. Lý do: schema linh hoạt (custom fields, athlete_data, payment_config), document embedding phù hợp với order/item pattern, không cần join phức tạp.
+> **Database**: Module này dùng **MongoDB** (Mongoose) độc lập với PostgreSQL của hệ thống chính. Lý do: schema linh hoạt (custom fields, athlete_data, payment_config), document embedding phù hợp với order/athlete pattern, không cần join phức tạp.
 
 ---
 
@@ -82,59 +82,37 @@ Mongoose tự tạo collection khi insert document đầu tiên. Indexes đượ
 | startTime           | Date                     | yes      |            | Thời gian bắt đầu gom vé                     |
 | endTime             | Date                     | yes      |            | Thời gian kết thúc gom vé                    |
 | status              | String (enum)            | yes      | `'DRAFT'`  | DRAFT, ACTIVE, CLOSED, CANCELLED             |
+| distances           | Array of {distance, price} | no    | `[]`       | Danh sách cự ly và giá (embedded)            |
+| groupName           | String                   | no       |            | Tên nhóm                                    |
+| groupLeader         | String                   | no       |            | Trưởng nhóm                                 |
+| zaloGroupUrl        | String                   | no       |            | Link nhóm Zalo                              |
+| hotline             | String                   | no       |            | Hotline liên hệ                             |
+| regulationsUrl      | String                   | no       |            | Link điều lệ giải                           |
+| fanpageUrl          | String                   | no       |            | Link fanpage                                |
 | paymentConfig       | Mixed (object)           | no       |            | STK, provider, account name...               |
 | createdAt           | Date                     | auto     |            | timestamps: true                             |
 | updatedAt           | Date                     | auto     |            | timestamps: true                             |
 
+**Embedded: `distances` item**
+
+| Field    | Type   | Note                        |
+|----------|--------|-----------------------------|
+| distance | String | Cự ly (VD: "5km", "21km")   |
+| price    | Number | Giá (VND)                   |
+
 **Indexes**: `slug` (unique), `creatorId`, `status`
 
+> **Lưu ý**: Không sử dụng collection `CampaignProduct` và `CampaignPricingPhase` riêng biệt. Thay vào đó, danh sách cự ly và giá được embed trực tiếp vào Campaign document dưới field `distances`.
+
 ---
 
-### 2. Collection `campaignproducts`
+### 2. Collection `campaigndiscounts`
 
 | Field               | Mongoose Type            | Required | Default | Note                                        |
 |---------------------|--------------------------|----------|---------|----------------------------------------------|
 | _id                 | ObjectId                 | auto     |         |                                              |
 | campaignId          | ObjectId (ref Campaign)  | yes      |         |                                              |
-| name                | String                   | yes      |         | Tên sản phẩm (VD: "Vé 21km")                |
-| description         | String                   | no       |         |                                              |
-| originalPrice       | Number                   | yes      |         | Giá gốc                                     |
-| totalQuantity       | Number                   | yes      |         | Tổng số lượng                                |
-| maxPerOrder         | Number                   | yes      | `10`    | Số lượng tối đa mỗi đơn                     |
-| sortOrder           | Number                   | yes      | `0`     |                                              |
-| isVisible           | Boolean                  | yes      | `true`  |                                              |
-| createdAt           | Date                     | auto     |         |                                              |
-| updatedAt           | Date                     | auto     |         |                                              |
-
-**Indexes**: `campaignId`
-
----
-
-### 3. Collection `campaignpricingphases`
-
-| Field               | Mongoose Type            | Required | Default | Note                                        |
-|---------------------|--------------------------|----------|---------|----------------------------------------------|
-| _id                 | ObjectId                 | auto     |         |                                              |
-| productId           | ObjectId (ref CampaignProduct) | yes |         |                                              |
-| name                | String                   | yes      |         | Early Bird, Regular, Late...                 |
-| price               | Number                   | yes      |         | Giá bán trong giai đoạn                      |
-| startTime           | Date                     | yes      |         |                                              |
-| endTime             | Date                     | yes      |         |                                              |
-| sortOrder           | Number                   | yes      | `0`     |                                              |
-| createdAt           | Date                     | auto     |         |                                              |
-| updatedAt           | Date                     | auto     |         |                                              |
-
-**Indexes**: `productId`
-
----
-
-### 4. Collection `campaigndiscounts`
-
-| Field               | Mongoose Type            | Required | Default | Note                                        |
-|---------------------|--------------------------|----------|---------|----------------------------------------------|
-| _id                 | ObjectId                 | auto     |         |                                              |
-| campaignId          | ObjectId (ref Campaign)  | yes      |         |                                              |
-| code                | String (unique, index)   | yes      |         | Mã giảm giá                                 |
+| code                | String (unique, index)   | yes      |         | Mã giảm giá (uppercase)                     |
 | discountType        | String (enum)            | yes      |         | PERCENTAGE, FIXED_AMOUNT                     |
 | discountValue       | Number                   | yes      |         | Giá trị giảm                                |
 | maxUses             | Number                   | no       |         | null = unlimited                             |
@@ -150,7 +128,7 @@ Mongoose tự tạo collection khi insert document đầu tiên. Indexes đượ
 
 ---
 
-### 5. Collection `campaigncustomfields`
+### 3. Collection `campaigncustomfields`
 
 | Field               | Mongoose Type            | Required | Default | Note                                        |
 |---------------------|--------------------------|----------|---------|----------------------------------------------|
@@ -170,13 +148,13 @@ Mongoose tự tạo collection khi insert document đầu tiên. Indexes đượ
 
 ---
 
-### 6. Collection `campaignorders`
+### 4. Collection `campaignorders`
 
 | Field               | Mongoose Type            | Required | Default    | Note                                        |
 |---------------------|--------------------------|----------|------------|----------------------------------------------|
 | _id                 | ObjectId                 | auto     |            |                                              |
 | campaignId          | ObjectId (ref Campaign)  | yes      |            |                                              |
-| orderCode           | String (unique, index)   | yes      |            | Mã đơn hàng tự sinh                         |
+| orderCode           | String (unique, index)   | yes      |            | Mã đơn hàng tự sinh (ORD-{ts}-{rand})       |
 | lastName            | String                   | yes      |            | Họ và tên đệm người mua                      |
 | firstName           | String                   | yes      |            | Tên người mua                                |
 | email               | String                   | no       |            |                                              |
@@ -187,24 +165,36 @@ Mongoose tự tạo collection khi insert document đầu tiên. Indexes đượ
 | discountId          | ObjectId (ref CampaignDiscount) | no |         | Mã giảm giá đã dùng                         |
 | paymentStatus       | String (enum)            | yes      | `'PENDING'`| PENDING, PAID, FAILED, REFUNDED             |
 | paymentId           | String                   | no       |            | UUID FK → PostgreSQL `payments.id`           |
-| items               | [OrderItem (embedded)]   | yes      |            | Embed danh sách item                         |
+| athletes            | [AthleteInfo (embedded)] | yes      |            | Embed danh sách VĐV                         |
 | orderDate           | Date                     | yes      | `Date.now` |                                              |
 | createdAt           | Date                     | auto     |            |                                              |
 | updatedAt           | Date                     | auto     |            |                                              |
 
 **Indexes**: `orderCode` (unique), `campaignId`, `paymentStatus`, `orderDate`
 
-#### Embedded: `OrderItem`
+#### Embedded: `AthleteInfo`
 
-| Field               | Mongoose Type            | Required | Default | Note                                        |
-|---------------------|--------------------------|----------|---------|----------------------------------------------|
-| productId           | ObjectId (ref CampaignProduct) | yes |         |                                              |
-| productName         | String                   | yes      |         | Snapshot tên sản phẩm tại thời điểm mua     |
-| unitPrice           | Number                   | yes      |         | Giá tại thời điểm mua                       |
-| quantity            | Number                   | yes      | `1`     |                                              |
-| athleteData         | Mixed (object)           | yes      |         | Thông tin VĐV (custom fields data)           |
+| Field                          | Mongoose Type              | Required | Note                                       |
+|--------------------------------|----------------------------|----------|--------------------------------------------|
+| distance                       | String                     | yes      | Cự ly đăng ký (VD: "5km")                  |
+| unitPrice                      | Number                     | yes      | Giá tại thời điểm đặt (tính từ campaign.distances) |
+| lastName                       | String                     | yes      | Họ và tên đệm VĐV                         |
+| firstName                      | String                     | yes      | Tên VĐV                                   |
+| phoneNumber                    | String                     | yes      | SĐT VĐV                                  |
+| location                       | String                     | no       | Địa chỉ                                   |
+| national                       | String                     | no       | Quốc tịch                                 |
+| provinceCode                   | String                     | no       | Mã tỉnh/thành (lấy từ API province)       |
+| dateOfBirth                    | Date                       | no       | Ngày sinh                                 |
+| sizeShirt                      | String (enum: SizeShirt)   | no       | Size áo (XS, S, M, L, XL, XXL)            |
+| club                           | String                     | no       | Câu lạc bộ                                |
+| nameInBib                      | String                     | no       | Tên trên BIB                              |
+| medicalInformationPhoneNumber  | String                     | no       | SĐT người liên hệ y tế                   |
+| medicalInformationName         | String                     | no       | Tên người liên hệ y tế                    |
+| medicalInformation             | String                     | no       | Thông tin y tế                             |
+| typeOfMedicine                 | String                     | no       | Loại thuốc đang dùng                      |
+| bloodType                      | String                     | no       | Nhóm máu                                  |
 
-> `items` được **embed** vào `CampaignOrder` (không tạo collection riêng) vì luôn được đọc cùng đơn hàng.
+> `athletes` được **embed** vào `CampaignOrder` (không tạo collection riêng) vì luôn được đọc cùng đơn hàng.
 
 ---
 
@@ -242,7 +232,19 @@ export enum CampaignFieldType {
   NUMBER = 'NUMBER',
   CHECKBOX = 'CHECKBOX',
 }
+
+// size-shirt.enum.ts
+export enum SizeShirt {
+  XS = 'XS',
+  S = 'S',
+  M = 'M',
+  L = 'L',
+  XL = 'XL',
+  XXL = 'XXL',
+}
 ```
+
+---
 
 ## Mongoose Schema Pattern
 
@@ -280,45 +282,59 @@ export class Campaign {
   @Prop({ type: String, enum: CampaignStatus, default: CampaignStatus.DRAFT, index: true })
   status: CampaignStatus;
 
+  @Prop({
+    type: [{ distance: String, price: Number }],
+    default: [],
+  })
+  distances: { distance: string; price: number }[];
+
+  @Prop()
+  groupName: string;
+
+  @Prop()
+  groupLeader: string;
+
+  @Prop()
+  zaloGroupUrl: string;
+
+  @Prop()
+  hotline: string;
+
+  @Prop()
+  regulationsUrl: string;
+
+  @Prop()
+  fanpageUrl: string;
+
   @Prop({ type: Object })
   paymentConfig: Record<string, any>;
 }
 
 export const CampaignSchema = SchemaFactory.createForClass(Campaign);
+CampaignSchema.index({ creatorId: 1 });
 ```
 
 ---
 
 ## API Endpoints
 
-### Campaign CRUD (Admin)
+### Campaign CRUD (Admin/Organizer)
 
 | Method | Endpoint                          | Auth         | Description                          |
 |--------|-----------------------------------|--------------|--------------------------------------|
 | POST   | `/campaigns`                      | Admin/Org    | Tạo chiến dịch                       |
-| GET    | `/campaigns`                      | Admin/Org    | Danh sách chiến dịch                 |
+| GET    | `/campaigns`                      | Admin/Org    | Danh sách chiến dịch (Admin: tất cả, Org: chỉ của mình) |
 | GET    | `/campaigns/:id`                  | Admin/Org    | Chi tiết chiến dịch                  |
-| PATCH  | `/campaigns/:id`                  | Admin/Org    | Cập nhật chiến dịch                  |
+| PATCH  | `/campaigns/:id`                  | Admin/Org    | Cập nhật chiến dịch (kiểm tra ownership) |
 | DELETE | `/campaigns/:id`                  | Admin        | Xóa chiến dịch (chỉ DRAFT)          |
-| PATCH  | `/campaigns/:id/status`           | Admin/Org    | Đổi trạng thái (activate/close)      |
+| PATCH  | `/campaigns/:id/status`           | Admin/Org    | Đổi trạng thái (kiểm tra ownership)  |
 
-### Campaign Products (Vé/Cự ly)
+### Public Campaigns
 
-| Method | Endpoint                                     | Auth         | Description                     |
-|--------|----------------------------------------------|--------------|---------------------------------|
-| POST   | `/campaigns/:campaignId/products`            | Admin/Org    | Tạo sản phẩm                    |
-| GET    | `/campaigns/:campaignId/products`            | Public       | Danh sách sản phẩm              |
-| PATCH  | `/campaigns/:campaignId/products/:id`        | Admin/Org    | Cập nhật sản phẩm               |
-| DELETE | `/campaigns/:campaignId/products/:id`        | Admin/Org    | Xóa sản phẩm                    |
-
-### Pricing Phases (Giai đoạn giá)
-
-| Method | Endpoint                                                     | Auth         | Description           |
-|--------|--------------------------------------------------------------|--------------|-----------------------|
-| POST   | `/campaigns/:campaignId/products/:productId/phases`          | Admin/Org    | Tạo giai đoạn giá     |
-| GET    | `/campaigns/:campaignId/products/:productId/phases`          | Public       | Danh sách giai đoạn    |
-| PATCH  | `/campaigns/:campaignId/products/:productId/phases/:id`      | Admin/Org    | Cập nhật               |
-| DELETE | `/campaigns/:campaignId/products/:productId/phases/:id`      | Admin/Org    | Xóa                   |
+| Method | Endpoint                        | Auth   | Description                                |
+|--------|---------------------------------|--------|--------------------------------------------|
+| GET    | `/campaigns/public`             | Public | Danh sách chiến dịch ACTIVE/CLOSED (pagination) |
+| GET    | `/campaigns/public/:slug`       | Public | Lấy thông tin chiến dịch ACTIVE/CLOSED qua slug |
 
 ### Discounts (Giảm giá)
 
@@ -335,7 +351,7 @@ export const CampaignSchema = SchemaFactory.createForClass(Campaign);
 | Method | Endpoint                                         | Auth         | Description                  |
 |--------|--------------------------------------------------|--------------|------------------------------|
 | POST   | `/campaigns/:campaignId/custom-fields`           | Admin/Org    | Tạo trường tùy chỉnh         |
-| GET    | `/campaigns/:campaignId/custom-fields`           | Public       | Danh sách trường              |
+| GET    | `/campaigns/:campaignId/custom-fields`           | Public       | Danh sách trường (sort by sortOrder) |
 | PATCH  | `/campaigns/:campaignId/custom-fields/:id`       | Admin/Org    | Cập nhật                     |
 | DELETE | `/campaigns/:campaignId/custom-fields/:id`       | Admin/Org    | Xóa                         |
 
@@ -346,13 +362,6 @@ export const CampaignSchema = SchemaFactory.createForClass(Campaign);
 | POST   | `/campaigns/:campaignId/orders`                    | Public       | Tạo đơn hàng (mua vé)                    |
 | GET    | `/campaigns/:campaignId/orders`                    | Admin/Org    | Danh sách đơn hàng (filter, pagination)  |
 | GET    | `/campaigns/:campaignId/orders/:id`                | Admin/Org    | Chi tiết đơn hàng                        |
-| GET    | `/campaigns/:campaignId/orders/export`             | Admin/Org    | Export Excel (format 5BIB/ActiUp)        |
-
-### Public (Trang mua vé)
-
-| Method | Endpoint                        | Auth   | Description                                |
-|--------|---------------------------------|--------|--------------------------------------------|
-| GET    | `/campaigns/public/:slug`       | Public | Lấy thông tin chiến dịch qua slug          |
 
 ---
 
@@ -365,109 +374,106 @@ src/
 │
 └── modules/campaign/
     ├── campaign.module.ts              ← MongooseModule.forFeature([...schemas])
-    ├── campaign.controller.ts
-    ├── campaign.service.ts
-    ├── schemas/                        ← Mongoose schemas (thay cho entities/)
-    │   ├── index.ts
-    │   ├── campaign.schema.ts
-    │   ├── campaign-product.schema.ts
-    │   ├── campaign-pricing-phase.schema.ts
+    ├── campaign.controller.ts          ← Campaign CRUD + public endpoints
+    ├── campaign.service.ts             ← Campaign business logic
+    ├── campaign-order.controller.ts    ← Order endpoints
+    ├── campaign-order.service.ts       ← Order business logic
+    ├── campaign-discount.controller.ts ← Discount endpoints
+    ├── campaign-discount.service.ts    ← Discount business logic + validate
+    ├── campaign-custom-field.controller.ts ← Custom field endpoints
+    ├── campaign-custom-field.service.ts   ← Custom field CRUD
+    ├── schemas/
+    │   ├── campaign.schema.ts          ← Campaign + embedded distances
+    │   ├── campaign-order.schema.ts    ← Order + embedded AthleteInfo
     │   ├── campaign-discount.schema.ts
-    │   ├── campaign-custom-field.schema.ts
-    │   └── campaign-order.schema.ts    ← embed OrderItem bên trong
+    │   └── campaign-custom-field.schema.ts
     ├── enums/
-    │   ├── index.ts
     │   ├── campaign-status.enum.ts
     │   ├── campaign-field-type.enum.ts
     │   ├── discount-type.enum.ts
-    │   └── campaign-order-status.enum.ts
-    ├── dto/
-    │   ├── create-campaign.dto.ts
-    │   ├── update-campaign.dto.ts
-    │   ├── create-campaign-product.dto.ts
-    │   ├── update-campaign-product.dto.ts
-    │   ├── create-pricing-phase.dto.ts
-    │   ├── update-pricing-phase.dto.ts
-    │   ├── create-discount.dto.ts
-    │   ├── update-discount.dto.ts
-    │   ├── create-campaign-custom-field.dto.ts
-    │   ├── create-order.dto.ts
-    │   ├── order-query.dto.ts
-    │   └── validate-discount.dto.ts
-    ├── campaign-product.controller.ts
-    ├── campaign-product.service.ts
-    ├── campaign-discount.controller.ts
-    ├── campaign-discount.service.ts
-    ├── campaign-order.controller.ts
-    ├── campaign-order.service.ts
-    └── campaign-export.service.ts
+    │   ├── campaign-order-status.enum.ts
+    │   └── size-shirt.enum.ts
+    └── dto/
+        ├── create-campaign.dto.ts      ← Includes DistanceItemDto
+        ├── update-campaign.dto.ts      ← PartialType(CreateCampaignDto)
+        ├── update-campaign-status.dto.ts
+        ├── create-discount.dto.ts
+        ├── update-discount.dto.ts      ← PartialType(CreateDiscountDto)
+        ├── validate-discount.dto.ts
+        ├── create-campaign-custom-field.dto.ts
+        ├── create-order.dto.ts         ← Includes AthleteInfoDto
+        └── order-query.dto.ts
 ```
 
 ---
 
-## Implementation Phases
+## Module Registration (`campaign.module.ts`)
 
-### Phase 1: MongoDB Init + Core Campaign
+```typescript
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: Campaign.name, schema: CampaignSchema },
+      { name: CampaignOrder.name, schema: CampaignOrderSchema },
+      // TODO: Cần bổ sung:
+      // { name: CampaignDiscount.name, schema: CampaignDiscountSchema },
+      // { name: CampaignCustomField.name, schema: CampaignCustomFieldSchema },
+    ]),
+  ],
+  controllers: [
+    CampaignController,
+    CampaignOrderController,
+    // TODO: Cần bổ sung:
+    // CampaignDiscountController,
+    // CampaignCustomFieldController,
+  ],
+  providers: [
+    CampaignService,
+    CampaignOrderService,
+    // TODO: Cần bổ sung:
+    // CampaignDiscountService,
+    // CampaignCustomFieldService,
+  ],
+  exports: [CampaignService, CampaignOrderService],
+})
+export class CampaignModule {}
+```
 
-**Setup:**
-- [ ] `npm install @nestjs/mongoose mongoose`
-- [ ] Tạo `src/libs/mongoose.config.ts`
-- [ ] Thêm `MONGODB_URI` và `MONGODB_DB_NAME` vào `.env`
-- [ ] Đăng ký `MongooseModule.forRootAsync` trong `AppModule`
+> **Lưu ý quan trọng**: Hiện tại `campaign.module.ts` chưa đăng ký `CampaignDiscount` và `CampaignCustomField` schemas, controllers và services. Cần bổ sung để các endpoint hoạt động.
 
-**Core:**
-- [ ] Tạo enums (`CampaignStatus`, `DiscountType`, `CampaignOrderStatus`, `CampaignFieldType`)
-- [ ] Tạo Mongoose schemas (`Campaign`, `CampaignProduct`, `CampaignPricingPhase`)
-- [ ] Tạo DTOs cho Campaign + Product + PricingPhase
-- [ ] Implement `CampaignService` (CRUD + status management)
-- [ ] Implement `CampaignProductService` (CRUD + pricing phase management)
-- [ ] Đăng ký schemas trong `CampaignModule` với `MongooseModule.forFeature`
-- [ ] Implement controllers
+---
 
-### Phase 2: Discount Engine
-- [ ] Tạo entity `CampaignDiscount`
-- [ ] Tạo DTOs
-- [ ] Implement `CampaignDiscountService` (CRUD + validate logic)
-- [ ] Logic: kiểm tra thời gian, số lần dùng, đơn hàng tối thiểu
-- [ ] API validate mã giảm giá
+## Implementation Status
 
-### Phase 3: Custom Fields (Form Data)
-- [ ] Tạo entity `CampaignCustomField`
-- [ ] Tạo DTOs
-- [ ] Implement CRUD (tận dụng pattern từ `EventCustomField`)
-- [ ] API public lấy danh sách fields cho form đăng ký
+### Đã hoàn thành
 
-### Phase 4: Orders (Đơn hàng)
-- [ ] Tạo entities (`CampaignOrder`, `CampaignOrderItem`)
-- [ ] Tạo DTOs (create order, query filters)
-- [ ] Implement `CampaignOrderService`:
-  - Tạo đơn hàng + tính giá theo phase hiện tại
-  - Áp dụng discount code
-  - Tích hợp payment module (gọi `PaymentsService`)
-  - Gộp thông tin người mua + VĐV trên một dòng
-- [ ] Implement query filters (trạng thái, cự ly, ngày đặt)
-- [ ] Webhook callback cập nhật `payment_status`
+- [x] MongoDB Init + Mongoose config
+- [x] Campaign schema (với embedded distances thay vì product/pricing phase riêng)
+- [x] Campaign CRUD + status management
+- [x] Campaign ownership validation (ADMIN xem tất cả, ORGANIZER chỉ xem của mình)
+- [x] Public campaign endpoints (list with pagination, get by slug)
+- [x] Discount schema + CRUD + validate logic
+- [x] Custom Fields schema + CRUD
+- [x] Order schema (với embedded AthleteInfo thay vì OrderItem)
+- [x] Order creation (tính giá từ campaign.distances)
+- [x] Order listing (filter by paymentStatus, distance, date range + pagination)
+- [x] Enums (CampaignStatus, DiscountType, CampaignOrderStatus, CampaignFieldType, SizeShirt)
 
-### Phase 5: Export + Tích hợp
-- [ ] Implement `CampaignExportService`:
-  - Export Excel format chuẩn 5BIB/ActiUp
-  - Bộ lọc theo trạng thái, cự ly, ngày
-- [ ] API public page (`/campaigns/public/:slug`)
-- [ ] Cấu hình thanh toán theo chiến dịch (STK cá nhân / công ty)
+### Cần hoàn thành
 
-### Phase 6: Payment Config
-- [ ] Cấu hình payment provider per campaign (Casso/Seapay)
-- [ ] Hỗ trợ STK cá nhân "Trưởng nhóm" hoặc tài khoản công ty
-- [ ] Lưu config vào `campaign.payment_config` (JSONB)
+- [ ] **Fix module registration**: Bổ sung CampaignDiscount + CampaignCustomField vào `campaign.module.ts`
+- [ ] **Export Excel**: Implement `CampaignExportService` (export format chuẩn 5BIB/ActiUp)
+- [ ] **Payment integration**: Tích hợp payment module khi tạo order
+- [ ] **Discount apply on order**: Áp dụng discount code khi tạo đơn hàng (hiện order service chưa tích hợp discount)
+- [ ] **Payment webhook**: Callback cập nhật `paymentStatus` + increment `usedCount` cho discount
+- [ ] **Payment Config**: Cấu hình payment provider per campaign (Casso/Seapay)
 
 ---
 
 ## Entity Relationships
 
 ```
-Campaign (1) ──── (N) CampaignProduct
-    │                      │
-    │                      └── (N) CampaignPricingPhase
+Campaign (1) ──── (N) distances (embedded)
     │
     ├── (N) CampaignDiscount
     │
@@ -475,61 +481,47 @@ Campaign (1) ──── (N) CampaignProduct
     │
     └── (N) CampaignOrder
                 │
-                └── (N) CampaignOrderItem ──── (1) CampaignProduct
+                └── (N) AthleteInfo (embedded) ──── distance → Campaign.distances
 
-Campaign (N) ──── (1) User (creator)
+Campaign (N) ──── (1) User (creator, via creatorId → PostgreSQL)
 ```
 
 ---
 
 ## Key Business Logic
 
-### Tính giá bán hiện tại
+### Tính giá bán (hiện tại)
 ```
-1. Lấy danh sách PricingPhases của product, sort theo start_time
-2. Tìm phase mà now() nằm trong [start_time, end_time]
-3. Nếu có → dùng price của phase đó
-4. Nếu không → dùng original_price của product
-```
-
-### Áp dụng Discount
-```
-1. Kiểm tra code tồn tại + is_active + thời gian hợp lệ
-2. Kiểm tra used_count < max_uses (nếu có giới hạn)
-3. Kiểm tra total_amount >= min_order_amount (nếu có)
-4. Tính discount_amount:
-   - PERCENTAGE: total_amount * discount_value / 100
-   - FIXED_AMOUNT: discount_value
-5. final_amount = total_amount - discount_amount
-6. Increment used_count khi order PAID
+1. Mỗi campaign có mảng `distances` chứa { distance, price }
+2. Khi tạo order, mỗi athlete chọn 1 distance
+3. Service lookup giá từ campaign.distances theo tên cự ly
+4. Nếu cự ly không tồn tại → throw BadRequestException
+5. totalAmount = sum(unitPrice) của tất cả athletes
+6. finalAmount = totalAmount (chưa tích hợp discount khi tạo order)
 ```
 
-### Export Excel
+### Áp dụng Discount (qua validate endpoint)
+```
+1. Kiểm tra code tồn tại + isActive + thời gian hợp lệ (startTime ≤ now ≤ endTime)
+2. Kiểm tra usedCount < maxUses (nếu có giới hạn)
+3. Kiểm tra totalAmount >= minOrderAmount (nếu có)
+4. Tính discountAmount:
+   - PERCENTAGE: (totalAmount * discountValue) / 100
+   - FIXED_AMOUNT: discountValue
+5. Cap: discountAmount = min(discountAmount, totalAmount)
+6. Trả về { discount, discountAmount }
+7. incrementUsedCount(discountId) khi order PAID (chưa implement webhook)
+```
+
+### Order Code Generation
+```
+Format: ORD-{timestamp_base36}-{random_4chars}
+VD: ORD-LM5K2X-A9B3
+```
+
+### Export Excel (chưa implement)
 ```
 Columns: Mã đơn | Người mua | SĐT | Email | Cự ly | Tên VĐV | BIB Name
-         | Size áo | CMND | CLB | Trạng thái TT | Ngày đặt | Số tiền
+         | Size áo | CLB | Nhóm máu | Trạng thái TT | Ngày đặt | Số tiền
 Format: Chuẩn 5BIB/ActiUp để import ngược
 ```
-
-
-the order of campain there are have field
-- Họ và tên đệm
-- name
-- email 
-- phoneNumber
-array thông tin người chạy: 
-- họ và tên đệm
-- Name
-- phoneNumber
-- location
-- national
-- provinceCode (get FROM api province)
-- Date Of birth 
-- sizeShirt
-- Club
-- Name in Bib
-- medicalInformationPhoneNumber
-- medicalInformationName
-- medicalInformation
-- typeOfMedicine
-- bloodType
