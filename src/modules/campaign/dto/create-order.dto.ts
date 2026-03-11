@@ -1,12 +1,12 @@
-import { IsString, IsOptional, IsArray, ValidateNested, IsEnum, IsDateString, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested, IsEnum, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SizeShirt } from '../enums/size-shirt.enum';
 
 export class AthleteInfoDto {
-  @ApiProperty({ example: 5, description: 'Cự ly đăng ký (km)' })
-  @IsNumber()
-  distance: number;
+  @ApiProperty({ example: '5km', description: 'Cự ly đăng ký' })
+  @IsString()
+  distance: string;
 
   @ApiProperty({ description: 'Họ và tên đệm' })
   @IsString()

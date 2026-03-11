@@ -31,10 +31,10 @@ export class Campaign {
   status: CampaignStatus;
 
   @Prop({
-    type: [{ distance: Number, price: Number }],
+    type: [{ distance: String, price: Number }],
     default: [],
   })
-  distances: { distance: number; price: number }[];
+  distances: { distance: string; price: number }[];
 
   @Prop()
   groupName: string;

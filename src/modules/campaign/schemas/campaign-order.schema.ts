@@ -4,7 +4,7 @@ import { CampaignOrderStatus } from '../enums/campaign-order-status.enum';
 import { SizeShirt } from '../enums/size-shirt.enum';
 
 export class AthleteInfo {
-  distance: number;
+  distance: string;
   unitPrice: number;
   lastName: string;
   firstName: string;
@@ -66,7 +66,7 @@ export class CampaignOrder {
   @Prop({
     type: [
       {
-        distance: Number,
+        distance: String,
         unitPrice: Number,
         lastName: String,
         firstName: String,

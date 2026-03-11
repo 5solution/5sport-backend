@@ -3,9 +3,9 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DistanceItemDto {
-  @ApiProperty({ example: 5, description: 'Cự ly (km)' })
-  @IsNumber()
-  distance: number;
+  @ApiProperty({ example: '5km', description: 'Cự ly' })
+  @IsString()
+  distance: string;
 
   @ApiProperty({ example: 200000, description: 'Giá (VND)' })
   @IsNumber()
