@@ -3,12 +3,14 @@ import { PaymentMethod } from 'src/modules/event/enums/payment-method.enum';
 import { IPaymentProvider } from './interfaces/payment-provider.interface';
 import { VnpayProvider } from './providers/vnpay/vnpay.provider';
 import { PayxProvider } from './providers/payx/payx.provider';
+import { SepayProvider } from './providers/sepay/sepay.provider';
 
 @Injectable()
 export class PaymentFactory {
   constructor(
     private readonly vnpayProvider: VnpayProvider,
     private readonly payxProvider: PayxProvider,
+    private readonly sepayProvider: SepayProvider,
   ) {}
 
   getProvider(paymentMethod: PaymentMethod | string): IPaymentProvider {
@@ -28,6 +30,8 @@ export class PaymentFactory {
         'PAYX': PaymentMethod.PAYX_QR,
         'PAYX_QR': PaymentMethod.PAYX_QR,
         'PAYX_DOMESTIC': PaymentMethod.PAYX_DOMESTIC,
+        'SEPAY': PaymentMethod.SEPAY_BANK_TRANSFER,
+        'SEPAY_BANK_TRANSFER': PaymentMethod.SEPAY_BANK_TRANSFER,
       };
 
       normalizedMethod = methodMap[normalizedMethod] || (normalizedMethod as any);
@@ -42,6 +46,9 @@ export class PaymentFactory {
       case PaymentMethod.PAYX_QR:
       case PaymentMethod.PAYX_DOMESTIC:
         return this.payxProvider;
+
+      case PaymentMethod.SEPAY_BANK_TRANSFER:
+        return this.sepayProvider;
 
       default:
         throw new BadRequestException(`Unsupported payment method: ${paymentMethod}`);

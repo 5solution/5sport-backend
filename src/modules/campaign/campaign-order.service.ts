@@ -1,19 +1,25 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CampaignOrder, CampaignOrderDocument } from './schemas/campaign-order.schema';
 import { Campaign, CampaignDocument } from './schemas/campaign.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
+import { CampaignOrderStatus } from './enums/campaign-order-status.enum';
+import { SepayProvider } from '../payments/providers/sepay/sepay.provider';
+import { SepayIpnPayloadDto } from './dto/sepay-ipn-payload.dto';
 
 @Injectable()
 export class CampaignOrderService {
+  private readonly logger = new Logger(CampaignOrderService.name);
+
   constructor(
     @InjectModel(CampaignOrder.name) private orderModel: Model<CampaignOrderDocument>,
     @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
+    private readonly sepayProvider: SepayProvider,
   ) {}
 
-  async create(campaignId: string, dto: CreateOrderDto): Promise<CampaignOrderDocument> {
+  async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: any; orderCode: string }> {
     const campaign = await this.campaignModel.findById(campaignId);
     if (!campaign) throw new NotFoundException('Campaign not found');
 
@@ -47,7 +53,11 @@ export class CampaignOrderService {
       orderDate: new Date(),
     });
 
-    return order.save();
+    const saved = await order.save();
+    return {
+      campaignId: saved.campaignId,
+      orderCode: saved.orderCode,
+    };
   }
 
   async findAll(campaignId: string, query: OrderQueryDto): Promise<{ data: CampaignOrderDocument[]; total: number }> {
@@ -82,6 +92,95 @@ export class CampaignOrderService {
     });
     if (!order) throw new NotFoundException('Order not found');
     return order;
+  }
+
+  async findByOrderCode(orderCode: string): Promise<CampaignOrderDocument> {
+    const order = await this.orderModel.findOne({ orderCode });
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  async initSepayPayment(campaignId: string, orderCode: string): Promise<{
+    orderCode: string;
+    checkoutUrl: string;
+    formFields: Record<string, any>;
+  }> {
+    const order = await this.orderModel.findOne({
+      orderCode,
+      campaignId: new Types.ObjectId(campaignId),
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (order.paymentStatus === CampaignOrderStatus.PAID) {
+      throw new ConflictException('Order is already paid');
+    }
+    if (order.paymentStatus === CampaignOrderStatus.REFUNDED) {
+      throw new ConflictException('Order has been refunded');
+    }
+
+    const paymentResponse = await this.sepayProvider.createPayment({
+      amount: order.finalAmount,
+      orderId: order.orderCode,
+      description: `Payment for order ${order.orderCode}`,
+      returnUrl: '',
+      callbackUrl: '',
+      ipAddr: '127.0.0.1',
+      paymentMethod: 'SEPAY_BANK_TRANSFER',
+    });
+
+    order.paymentProvider = 'sepay';
+    order.paymentStatus = CampaignOrderStatus.PENDING;
+    await order.save();
+
+    return {
+      orderCode: order.orderCode,
+      checkoutUrl: paymentResponse.paymentUrl,
+      formFields: (paymentResponse as any).formFields,
+    };
+  }
+
+  async processSepayIpn(payload: SepayIpnPayloadDto): Promise<{ success: true }> {
+    if (payload.notification_type !== 'ORDER_PAID') {
+      return { success: true };
+    }
+
+    const invoiceNumber = payload.order.order_invoice_number;
+    const order = await this.orderModel.findOne({ orderCode: invoiceNumber });
+    if (!order) {
+      return { success: true };
+    }
+
+    const terminalStatuses = [CampaignOrderStatus.PAID, CampaignOrderStatus.FAILED, CampaignOrderStatus.REFUNDED];
+    if (terminalStatuses.includes(order.paymentStatus)) {
+      return { success: true };
+    }
+
+    const result = await this.orderModel.updateOne(
+      { _id: order._id, paymentStatus: CampaignOrderStatus.PENDING },
+      {
+        $set: {
+          paymentStatus: CampaignOrderStatus.PAID,
+          paymentProvider: 'sepay',
+          providerTransactionId: payload.transaction.transaction_id,
+          paidAt: payload.transaction.transaction_date
+            ? new Date(payload.transaction.transaction_date)
+            : new Date(),
+          paymentMetadata: {
+            sepayOrderId: payload.order.id,
+            sepayTransactionId: payload.transaction.id,
+            transactionDate: payload.transaction.transaction_date,
+            transactionAmount: payload.transaction.transaction_amount,
+            paymentMethod: payload.transaction.payment_method,
+          },
+        },
+      },
+    );
+
+    if (result.modifiedCount > 0) {
+      this.logger.log(`Order ${invoiceNumber} marked as PAID via SePay IPN`);
+    }
+
+    return { success: true };
   }
 
   private generateOrderCode(): string {

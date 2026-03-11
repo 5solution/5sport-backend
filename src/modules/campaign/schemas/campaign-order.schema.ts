@@ -63,6 +63,18 @@ export class CampaignOrder {
   @Prop()
   paymentId: string;
 
+  @Prop({ type: String, default: null })
+  paymentProvider: string | null;
+
+  @Prop({ type: String, default: null })
+  providerTransactionId: string | null;
+
+  @Prop({ type: Date, default: null })
+  paidAt: Date | null;
+
+  @Prop({ type: Object, default: null })
+  paymentMetadata: Record<string, any> | null;
+
   @Prop({
     type: [
       {

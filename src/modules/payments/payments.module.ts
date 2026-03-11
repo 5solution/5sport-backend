@@ -12,6 +12,7 @@ import { PaymentFactory } from './payment.factory';
 import { VnpayProvider } from './providers/vnpay/vnpay.provider';
 import { PayxProvider } from './providers/payx/payx.provider';
 import { PayxConfig } from './providers/payx/payx.config';
+import { SepayProvider } from './providers/sepay/sepay.provider';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { PayxConfig } from './providers/payx/payx.config';
     VnpayProvider,
     PayxProvider,
     PayxConfig,
+    SepayProvider,
   ],
-  exports: [PaymentsService],
+  exports: [PaymentsService, SepayProvider],
 })
 export class PaymentsModule {}
