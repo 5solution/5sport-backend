@@ -69,6 +69,7 @@
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "sepay-pg-node": "^1.0.0",
     "telegraf": "^4.16.3",
     "typeorm": "^0.3.25",
     "uuid": "^11.1.0",

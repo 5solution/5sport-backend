@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiCreatedResponse } from '@nestjs/swagger';
 import { CampaignOrderService } from './campaign-order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { CreateOrderResponseDto } from './dto/create-order-response.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -14,6 +15,7 @@ export class CampaignOrderController {
   constructor(private readonly orderService: CampaignOrderService) {}
 
   @Post()
+  @ApiCreatedResponse({ type: CreateOrderResponseDto })
   create(@Param('campaignId') campaignId: string, @Body() dto: CreateOrderDto) {
     return this.orderService.create(campaignId, dto);
   }

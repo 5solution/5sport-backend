@@ -29,6 +29,12 @@ const envVarsSchema = Joi.object()
 
     MONGODB_URI: Joi.string().uri().default('mongodb://localhost:27017'),
     MONGODB_DB_NAME: Joi.string().default('5sport_campaign'),
+
+    SEPAY_ENV: Joi.string().valid('sandbox', 'production').default('sandbox'),
+    SEPAY_MERCHANT_ID: Joi.string().required(),
+    SEPAY_SECRET_KEY: Joi.string().required(),
+    SEPAY_WEBHOOK_API_KEY: Joi.string().required(),
+    APP_PUBLIC_BASE_URL: Joi.string().default('http://localhost:3000'),
   })
   .unknown();
 
@@ -69,6 +75,13 @@ export const env = {
     uri: envVars.MONGODB_URI,
     dbName: envVars.MONGODB_DB_NAME,
   },
+  sepay: {
+    env: envVars.SEPAY_ENV as 'sandbox' | 'production',
+    merchantId: envVars.SEPAY_MERCHANT_ID,
+    secretKey: envVars.SEPAY_SECRET_KEY,
+    webhookApiKey: envVars.SEPAY_WEBHOOK_API_KEY,
+  },
+  appPublicBaseUrl: envVars.APP_PUBLIC_BASE_URL,
 };
 
 console.log('Configuration loaded successfully:', {
