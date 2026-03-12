@@ -7,13 +7,12 @@ import { env } from 'src/config';
 export class SepayApiKeyGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const authHeader = request.headers['authorization'];
+    const providedKey = request.headers['x-secret-key'];
 
-    if (!authHeader || !authHeader.startsWith('Apikey ')) {
+    if (!providedKey || typeof providedKey !== 'string') {
       throw new UnauthorizedException('Missing or invalid SePay API key');
     }
 
-    const providedKey = authHeader.slice('Apikey '.length);
     const expectedKey = env.sepay.webhookApiKey;
 
     if (!expectedKey) {
