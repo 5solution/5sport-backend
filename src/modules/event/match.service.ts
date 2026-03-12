@@ -55,14 +55,19 @@ export class MatchService {
 
   async startMatch(id: string): Promise<Match> {
     const match = await this.findOne(id);
-    
-    if (match.status !== MatchStatus.SCHEDULED) {
-      throw new BadRequestException('Match can only be started from SCHEDULED status');
+
+    if (
+      match.status !== MatchStatus.SCHEDULED &&
+      match.status !== MatchStatus.WARM_UP
+    ) {
+      throw new BadRequestException(
+        'Match can only be started from SCHEDULED or WARM_UP status',
+      );
     }
 
     match.status = MatchStatus.IN_PROGRESS;
     match.startTime = new Date();
-    
+
     return await this.matchRepository.save(match);
   }
 

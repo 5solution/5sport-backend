@@ -21,6 +21,8 @@ import { UploadModule } from './upload/upload.module';
 import { SeedModule } from './seed/seed.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { MailModule } from './mail/mail.module';
+import { CourtModule } from './court/court.module';
+import { DispatchModule } from './dispatch/dispatch.module';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { MailModule } from './mail/mail.module';
     SeedModule,
     CampaignModule,
     MailModule,
+    CourtModule,
+    DispatchModule,
   ],
   providers: [s3ClientProvider],
 })

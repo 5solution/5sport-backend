@@ -13,11 +13,12 @@ import { EventSession } from './event-session.entity';
 import { Stage } from './stage.entity';
 import { Athlete } from 'src/modules/athlete/entities/athlete.entity';
 import { MatchScore } from './match-score.entity';
-import { Use } from 'nestjs-telegraf';
-import { User } from 'src/modules/user/user.entity';
+import { Court } from 'src/modules/court/entities/court.entity';
 
 export enum MatchStatus {
+  PENDING = 'PENDING',
   SCHEDULED = 'SCHEDULED',
+  WARM_UP = 'WARM_UP',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
@@ -97,11 +98,25 @@ export class Match extends BaseEntityWithoutId {
   round: string;
 
   @ApiPropertyOptional({
-    description: 'Court number',
+    description: 'Court number (deprecated, use courtId)',
     example: 1,
   })
   @Column({ name: 'court_number', nullable: true })
   courtNumber: number;
+
+  @ApiPropertyOptional({ description: 'Court ID' })
+  @Column({ name: 'court_id', nullable: true, type: 'uuid' })
+  @Index()
+  courtId: string;
+
+  @ApiPropertyOptional({ type: () => Court })
+  @ManyToOne(() => Court, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'court_id' })
+  court: Court;
+
+  @ApiProperty({ description: 'Match priority for auto-assign', default: 0 })
+  @Column({ default: 0 })
+  priority: number;
 
   @ApiProperty({
     description: 'Scheduled time',
