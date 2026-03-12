@@ -81,6 +81,16 @@ export class CreateCampaignDto {
   @IsString()
   fanpageUrl?: string;
 
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    description: 'Danh sách size áo của campaign',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  sizeShirtOptions?: string[];
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsObject()

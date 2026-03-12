@@ -112,6 +112,7 @@ export class CampaignService {
       hotline: obj.hotline,
       regulationsUrl: obj.regulationsUrl,
       fanpageUrl: obj.fanpageUrl,
+      sizeShirtOptions: obj.sizeShirtOptions || [],
       createdAt: obj.createdAt,
       updatedAt: obj.updatedAt,
     };

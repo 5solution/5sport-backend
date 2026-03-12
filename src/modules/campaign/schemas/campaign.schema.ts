@@ -54,6 +54,9 @@ export class Campaign {
   @Prop()
   fanpageUrl: string;
 
+  @Prop({ type: [String], default: [] })
+  sizeShirtOptions: string[];
+
   @Prop({ type: Object })
   paymentConfig: Record<string, any>;
 }

@@ -1,7 +1,7 @@
-import { IsString, IsOptional, IsArray, ValidateNested, IsEnum, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested, IsDateString, IsEmail, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { SizeShirt } from '../enums/size-shirt.enum';
+import { Gender } from '../enums/gender.enum';
 
 export class AthleteInfoDto {
   @ApiProperty({ example: '5km', description: 'Cự ly đăng ký' })
@@ -20,40 +20,47 @@ export class AthleteInfoDto {
   @IsString()
   phoneNumber: string;
 
-  @ApiPropertyOptional({ description: 'Địa chỉ' })
-  @IsOptional()
-  @IsString()
-  location?: string;
+  @ApiProperty({ description: 'Email' })
+  @IsEmail()
+  email: string;
 
-  @ApiPropertyOptional({ description: 'Quốc tịch' })
-  @IsOptional()
-  @IsString()
-  national?: string;
+  @ApiProperty({ description: 'Giới tính', enum: Gender })
+  @IsEnum(Gender)
+  gender: Gender;
 
-  @ApiPropertyOptional({ description: 'Mã tỉnh/thành phố (lấy từ API province)' })
-  @IsOptional()
-  @IsString()
-  provinceCode?: string;
-
-  @ApiPropertyOptional({ description: 'Ngày sinh' })
-  @IsOptional()
+  @ApiProperty({ description: 'Ngày sinh' })
   @IsDateString()
-  dateOfBirth?: string;
+  dateOfBirth: string;
 
-  @ApiPropertyOptional({ description: 'Size áo', enum: SizeShirt })
+  @ApiProperty({ description: 'Số CCCD / Hộ chiếu' })
+  @IsString()
+  identityCard: string;
+
+  @ApiProperty({ description: 'Quốc tịch' })
+  @IsString()
+  national: string;
+
+  @ApiProperty({ description: 'Mã tỉnh/thành phố (lấy từ API province)' })
+  @IsString()
+  provinceCode: string;
+
+  @ApiProperty({ description: 'Địa chỉ' })
+  @IsString()
+  location: string;
+
+  @ApiProperty({ description: 'Tên trên BIB' })
+  @IsString()
+  nameInBib: string;
+
+  @ApiPropertyOptional({ description: 'Size áo (theo danh sách sizeShirtOptions của campaign)' })
   @IsOptional()
-  @IsEnum(SizeShirt)
-  sizeShirt?: SizeShirt;
+  @IsString()
+  sizeShirt?: string;
 
   @ApiPropertyOptional({ description: 'Câu lạc bộ' })
   @IsOptional()
   @IsString()
   club?: string;
-
-  @ApiPropertyOptional({ description: 'Tên trên BIB' })
-  @IsOptional()
-  @IsString()
-  nameInBib?: string;
 
   @ApiPropertyOptional({ description: 'SĐT người liên hệ y tế' })
   @IsOptional()
@@ -90,10 +97,9 @@ export class CreateOrderDto {
   @IsString()
   firstName: string;
 
-  @ApiPropertyOptional({ description: 'Email' })
-  @IsOptional()
-  @IsString()
-  email?: string;
+  @ApiProperty({ description: 'Email' })
+  @IsEmail()
+  email: string;
 
   @ApiProperty({ description: 'Số điện thoại' })
   @IsString()

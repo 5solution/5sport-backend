@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { CampaignOrderStatus } from '../enums/campaign-order-status.enum';
-import { SizeShirt } from '../enums/size-shirt.enum';
+import { Gender } from '../enums/gender.enum';
 
 export class AthleteInfo {
   distance: string;
@@ -9,11 +9,14 @@ export class AthleteInfo {
   lastName: string;
   firstName: string;
   phoneNumber: string;
+  email: string;
+  gender: Gender;
+  identityCard: string;
   location: string;
   national: string;
   provinceCode: string;
   dateOfBirth: Date;
-  sizeShirt: SizeShirt;
+  sizeShirt: string;
   club: string;
   nameInBib: string;
   medicalInformationPhoneNumber: string;
@@ -83,11 +86,14 @@ export class CampaignOrder {
         lastName: String,
         firstName: String,
         phoneNumber: String,
+        email: { type: String, required: true },
+        gender: { type: String, enum: Gender },
+        identityCard: String,
         location: String,
         national: String,
         provinceCode: String,
         dateOfBirth: Date,
-        sizeShirt: { type: String, enum: SizeShirt },
+        sizeShirt: String,
         club: String,
         nameInBib: String,
         medicalInformationPhoneNumber: String,

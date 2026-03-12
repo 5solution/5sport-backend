@@ -58,6 +58,9 @@ export class CampaignPublicResponseDto {
   @ApiPropertyOptional({ example: 'https://facebook.com/5bib', description: 'Link fanpage' })
   fanpageUrl?: string;
 
+  @ApiPropertyOptional({ type: [String], example: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], description: 'Danh sách size áo' })
+  sizeShirtOptions?: string[];
+
   @ApiProperty({ example: '2026-03-11T16:47:18.041Z', description: 'Thời gian tạo' })
   createdAt: Date;
 
