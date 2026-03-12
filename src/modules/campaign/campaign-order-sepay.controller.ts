@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Param,
   Body,
@@ -9,7 +10,8 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiSecurity } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse, ApiParam, ApiResponse, ApiSecurity } from '@nestjs/swagger';
+import { OrderPublicResponseDto } from './dto/order-public-response.dto';
 import { CampaignOrderService } from './campaign-order.service';
 import { InitSepayPaymentDto } from './dto/init-sepay-payment.dto';
 import { SepayIpnPayloadDto } from './dto/sepay-ipn-payload.dto';
@@ -35,6 +37,14 @@ export class CampaignOrderSepayController {
     @Body() _dto: InitSepayPaymentDto,
   ) {
     return this.orderService.initSepayPayment(campaignId, orderCode);
+  }
+
+  @Get('orders/:orderCode/public')
+  @ApiOperation({ summary: 'Get public order summary (no auth required)' })
+  @ApiParam({ name: 'orderCode', description: 'Order code' })
+  @ApiOkResponse({ type: OrderPublicResponseDto })
+  findOnePublic(@Param('orderCode') orderCode: string) {
+    return this.orderService.findPublicByOrderCode(orderCode);
   }
 
   @Post('campaigns/orders/sepay/ipn')

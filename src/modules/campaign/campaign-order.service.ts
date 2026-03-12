@@ -94,6 +94,15 @@ export class CampaignOrderService {
     return order;
   }
 
+  async findPublicByOrderCode(orderCode: string): Promise<Pick<CampaignOrder, 'orderCode' | 'lastName' | 'firstName' | 'paymentStatus' | 'paymentId' | 'paidAt'>> {
+    const order = await this.orderModel
+      .findOne({ orderCode })
+      .select('orderCode lastName firstName paymentStatus paymentId paidAt')
+      .lean();
+    if (!order) throw new NotFoundException('Order not found');
+    return order as any;
+  }
+
   async findByOrderCode(orderCode: string): Promise<CampaignOrderDocument> {
     const order = await this.orderModel.findOne({ orderCode });
     if (!order) throw new NotFoundException('Order not found');
