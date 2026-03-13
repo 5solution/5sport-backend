@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import * as ExcelJS from 'exceljs';
 import { CampaignOrder, CampaignOrderDocument } from './schemas/campaign-order.schema';
 import { Campaign, CampaignDocument } from './schemas/campaign.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -199,6 +200,118 @@ export class CampaignOrderService {
     }
 
     return { success: true };
+  }
+
+  async exportExcel(campaignId: string, fromDate: string, toDate: string): Promise<ExcelJS.Buffer> {
+    const campaign = await this.campaignModel.findById(campaignId);
+    if (!campaign) throw new NotFoundException('Campaign not found');
+
+    const filter: any = { campaignId: new Types.ObjectId(campaignId) };
+    if (fromDate || toDate) {
+      filter.orderDate = {};
+      if (fromDate) filter.orderDate.$gte = new Date(fromDate);
+      if (toDate) filter.orderDate.$lte = new Date(toDate);
+    }
+
+    const orders = await this.orderModel.find(filter).sort({ orderDate: -1 }).lean();
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Orders');
+
+    sheet.columns = [
+      { header: 'STT', key: 'stt', width: 6 },
+      { header: 'ID', key: 'id', width: 26 },
+      { header: 'Tên sự kiện', key: 'eventName', width: 30 },
+      { header: 'Mã đơn hàng', key: 'orderCode', width: 18 },
+      { header: 'Họ và tên người mua', key: 'buyerName', width: 25 },
+      { header: 'Email người mua', key: 'buyerEmail', width: 25 },
+      { header: 'Số Điện thoại người mua', key: 'buyerPhone', width: 20 },
+      { header: 'Thời gian xử lý', key: 'processedAt', width: 20 },
+      { header: 'Payment Ref', key: 'paymentRef', width: 20 },
+      { header: 'Đơn giá', key: 'unitPrice', width: 12 },
+      { header: 'Số lượng', key: 'quantity', width: 10 },
+      { header: 'Tổng tiền cuối', key: 'finalAmount', width: 15 },
+      { header: 'Cung đường', key: 'distance', width: 12 },
+      { header: 'Họ và tên', key: 'fullName', width: 25 },
+      { header: 'Họ', key: 'lastName', width: 15 },
+      { header: 'Tên', key: 'firstName', width: 15 },
+      { header: 'Ngày sinh', key: 'dateOfBirth', width: 15 },
+      { header: 'Giới tính', key: 'gender', width: 10 },
+      { header: 'CCCD/ Hộ chiếu', key: 'identityCard', width: 18 },
+      { header: 'Quốc tịch', key: 'national', width: 15 },
+      { header: 'Email', key: 'email', width: 25 },
+      { header: 'Địa chỉ', key: 'location', width: 30 },
+      { header: 'Số điện thoại', key: 'phoneNumber', width: 18 },
+      { header: 'Số điện thoại khẩn cấp', key: 'emergencyPhone', width: 20 },
+      { header: 'Câu lạc bộ', key: 'club', width: 15 },
+      { header: 'Trạng thái sức khỏe', key: 'medicalInfo', width: 20 },
+      { header: 'Size áo', key: 'sizeShirt', width: 10 },
+      { header: 'Loại thuốc đang dùng', key: 'typeOfMedicine', width: 20 },
+      { header: 'Nhóm máu', key: 'bloodType', width: 10 },
+      { header: 'Tên trên BIB', key: 'nameInBib', width: 18 },
+      { header: 'Tên người giám hộ (nếu có)', key: 'guardianName', width: 25 },
+      { header: 'Email người giám hộ (nếu có)', key: 'guardianEmail', width: 25 },
+      { header: 'CCCD người giám hộ (nếu có)', key: 'guardianIdentityCard', width: 20 },
+      { header: 'Ngày sinh người giám hộ (nếu có)', key: 'guardianDob', width: 20 },
+      { header: 'SĐT người giám hộ (nếu có)', key: 'guardianPhone', width: 20 },
+      { header: 'Mối quan hệ với người giám hộ (nếu có)', key: 'guardianRelationship', width: 20 },
+      { header: 'Trạng thái vé', key: 'ticketStatus', width: 15 },
+      { header: 'Trạng thái VĐV', key: 'athleteStatus', width: 15 },
+    ];
+
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.alignment = { horizontal: 'center' };
+
+    let stt = 0;
+    for (const order of orders) {
+      for (const athlete of order.athletes) {
+        stt++;
+        const guardian = (athlete as any).guardian;
+        sheet.addRow({
+          stt,
+          id: (order as any)._id?.toString(),
+          eventName: campaign.name,
+          orderCode: order.orderCode,
+          buyerName: `${order.lastName} ${order.firstName}`,
+          buyerEmail: order.email,
+          buyerPhone: order.phoneNumber,
+          processedAt: order.paidAt ? new Date(order.paidAt).toLocaleString('vi-VN') : '',
+          paymentRef: order.providerTransactionId || '',
+          unitPrice: (athlete as any).unitPrice,
+          quantity: order.athletes.length,
+          finalAmount: order.finalAmount,
+          distance: athlete.distance,
+          fullName: `${athlete.lastName} ${athlete.firstName}`,
+          lastName: athlete.lastName,
+          firstName: athlete.firstName,
+          dateOfBirth: athlete.dateOfBirth ? new Date(athlete.dateOfBirth).toLocaleDateString('vi-VN') : '',
+          gender: athlete.gender,
+          identityCard: athlete.identityCard,
+          national: athlete.national,
+          email: athlete.email,
+          location: athlete.location,
+          phoneNumber: athlete.phoneNumber,
+          emergencyPhone: athlete.medicalInformationPhoneNumber || '',
+          club: athlete.club || '',
+          medicalInfo: athlete.medicalInformation || '',
+          sizeShirt: athlete.sizeShirt || '',
+          typeOfMedicine: athlete.typeOfMedicine || '',
+          bloodType: athlete.bloodType || '',
+          nameInBib: athlete.nameInBib,
+          guardianName: guardian?.fullName || '',
+          guardianEmail: guardian?.email || '',
+          guardianIdentityCard: guardian?.identityCard || '',
+          guardianDob: guardian?.dateOfBirth ? new Date(guardian.dateOfBirth).toLocaleDateString('vi-VN') : '',
+          guardianPhone: guardian?.phoneNumber || '',
+          guardianRelationship: guardian?.relationship || '',
+          ticketStatus: order.paymentStatus,
+          athleteStatus: '',
+        });
+      }
+    }
+
+    return workbook.xlsx.writeBuffer();
   }
 
   private generateOrderCode(): string {
