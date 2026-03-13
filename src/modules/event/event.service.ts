@@ -5,11 +5,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, LessThanOrEqual, Repository } from 'typeorm';
+import { ILike, In, LessThan, LessThanOrEqual, Repository } from 'typeorm';
 import {
   PaginatedResponseDto,
   PaginationQueryDto,
 } from 'src/common/dto/pagination.dto';
+import { PublicEventQueryDto } from './dto/public-event-query.dto';
 import { Role } from 'src/common/enums/role.enum';
 
 import { Event } from './entities/event.entity';
@@ -35,12 +36,13 @@ import { SetBlacklistDto } from './dto/blacklist.dto';
 import { ReorderDto } from './dto/reorder.dto';
 
 import { EventStatus } from './enums/event-status.enum';
-import { MatchType } from './enums/match-type.enum';
+import { CompetitionFormat } from './enums/competition-format.enum';
 
 import { validateTimeline } from './validators/timeline.validator';
 import { validateScoringConfig } from './validators/scoring-config.validator';
 import { generateSlug } from './utils/slug.util';
 import { parseBlacklist } from './utils/blacklist.util';
+import { ProvinceService } from '../province/province.service';
 
 @Injectable()
 export class EventService {
@@ -59,6 +61,7 @@ export class EventService {
     private readonly fieldRepo: Repository<EventCustomField>,
     @InjectRepository(EventBlacklist)
     private readonly blacklistRepo: Repository<EventBlacklist>,
+    private readonly provinceService: ProvinceService,
   ) {}
 
   // ─── Helpers ───
@@ -124,7 +127,30 @@ export class EventService {
     return new PaginatedResponseDto(events, total, page, limit);
   }
 
-  async findById(id: string): Promise<Event> {
+  async findPublic(
+    query: PublicEventQueryDto,
+  ): Promise<PaginatedResponseDto<Event>> {
+    const { page = 1, limit = 10, sportType, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      status: In([EventStatus.PUBLISHED, EventStatus.LIVE]),
+    };
+
+    if (sportType) where.sportType = sportType;
+    if (search) where.name = ILike(`%${search}%`);
+
+    const [events, total] = await this.eventRepo.findAndCount({
+      where,
+      skip,
+      take: limit,
+      order: { eventStartTime: 'ASC' },
+    });
+
+    return new PaginatedResponseDto(events, total, page, limit);
+  }
+
+  async findById(id: string): Promise<Event & { provinceName: string | null; wardName: string | null }> {
     const event = await this.eventRepo.findOne({
       where: { id },
       relations: [
@@ -132,12 +158,23 @@ export class EventService {
         'descriptions',
         'sessions',
         'sessions.ticketTiers',
+        'sessions.stages',
+        'sessions.stages.matches',
         'customFields',
         'blacklist',
       ],
     });
     if (!event) throw new NotFoundException('Sự kiện không tồn tại.');
-    return event;
+
+    const [province, ward] = await Promise.all([
+      this.provinceService.getProvince(parseInt(event.provinceCode)).catch(() => null),
+      this.provinceService.getWard(parseInt(event.wardCode)).catch(() => null),
+    ]);
+
+    return Object.assign(event, {
+      provinceName: province?.name ?? null,
+      wardName: ward?.name ?? null,
+    });
   }
 
   async update(
@@ -369,7 +406,7 @@ export class EventService {
       throw new BadRequestException('Mã vé đã tồn tại trong sự kiện này.');
     }
 
-    if (dto.matchType === MatchType.SINGLES) {
+    if (dto.competitionFormat === CompetitionFormat.SINGLES) {
       dto.requirePartner = false;
     }
 
@@ -625,6 +662,14 @@ export class EventService {
         { sortOrder: i },
       );
     }
+  }
+
+  async getCustomFields(eventId: string): Promise<EventCustomField[]> {
+    await this.findEventOrFail(eventId);
+    return this.fieldRepo.find({
+      where: { eventId },
+      order: { sortOrder: 'ASC' },
+    });
   }
 
   // ─── Scoring Config ───

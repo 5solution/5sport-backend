@@ -157,4 +157,11 @@ export class MatchService {
       order: { scheduledTime: 'ASC' },
     });
   }
+
+  async findAllByStage(stageId: string): Promise<Match[]> {
+    return await this.matchRepository.find({
+      where: { stageId },
+      order: { matchNumber: 'ASC' },
+    });
+  }
 }

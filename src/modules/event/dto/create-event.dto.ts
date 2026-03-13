@@ -13,6 +13,7 @@ import {
 import { SportType } from '../enums/sport-type.enum';
 import { PaymentMethod } from '../enums/payment-method.enum';
 
+
 export class CreateEventDto {
   @ApiProperty({
     description: 'Tên sự kiện',

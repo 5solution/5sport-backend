@@ -25,7 +25,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly botService: BotService,
+    //private readonly botService: BotService,
   ) {
     this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   }
@@ -40,7 +40,7 @@ export class AuthService {
         : this.buildGoogleRegistrationMessage(user);
 
     try {
-      await this.botService.sendToTargetGroup(message);
+      //await this.botService.sendToTargetGroup(message);
     } catch (error) {
       console.error('Failed to send Telegram notification:', error);
     }

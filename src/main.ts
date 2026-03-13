@@ -7,30 +7,32 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import * as morgan from 'morgan';
 
 // Set up your API key
 
 import { env } from './config';
 import { AppModule } from './modules/app.module';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { httpLogger } from './common/middlewares/logger.middleware';
 
 const setMiddleware = (app: NestExpressApplication) => {
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      crossOriginOpenerPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   app.enableCors({
     credentials: true,
-    origin: (_, callback) => callback(null, true),
-    allowedHeaders: [
-      '*',
-      'Authorization',
-      'Content-Type',
-      'X-Requested-With',
-      'Wallet-Address',
-      'wallet-address',
-    ],
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: '*',
   });
 
-  app.use(morgan('combined'));
+  app.use(httpLogger);
 
   app.use(compression());
 
@@ -40,6 +42,7 @@ const setMiddleware = (app: NestExpressApplication) => {
     new ValidationPipe({
       transform: true,
       whitelist: true,
+      transformOptions: { enableImplicitConversion: true },
     }),
   );
 };
@@ -57,6 +60,9 @@ async function bootstrap() {
   });
 
   setMiddleware(app);
+
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   if (process.env.NODE_ENV !== 'production') {
     const swaggerConfig = new DocumentBuilder()

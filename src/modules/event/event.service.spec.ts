@@ -8,6 +8,7 @@ import {
 import { Repository } from 'typeorm';
 
 import { EventService } from './event.service';
+import { ProvinceService } from '../province/province.service';
 import { Event } from './entities/event.entity';
 import { EventMedia } from './entities/event-media.entity';
 import { EventDescription } from './entities/event-description.entity';
@@ -18,7 +19,7 @@ import { EventBlacklist } from './entities/event-blacklist.entity';
 import { EventStatus } from './enums/event-status.enum';
 import { SportType } from './enums/sport-type.enum';
 import { PaymentMethod } from './enums/payment-method.enum';
-import { MatchType } from './enums/match-type.enum';
+import { CompetitionFormat } from './enums/competition-format.enum';
 import { FieldType } from './enums/field-type.enum';
 import { Role } from 'src/common/enums/role.enum';
 
@@ -89,6 +90,13 @@ describe('EventService', () => {
         { provide: getRepositoryToken(TicketTier), useValue: ticketRepo },
         { provide: getRepositoryToken(EventCustomField), useValue: fieldRepo },
         { provide: getRepositoryToken(EventBlacklist), useValue: blacklistRepo },
+        {
+          provide: ProvinceService,
+          useValue: {
+            getProvince: vi.fn().mockResolvedValue({ name: 'Thành phố Hà Nội' }),
+            getWard: vi.fn().mockResolvedValue({ name: 'Phường Láng Hạ' }),
+          },
+        },
       ],
     }).compile();
 
@@ -523,7 +531,7 @@ describe('EventService', () => {
         'e1',
         {
           name: 'Đơn Nam',
-          matchType: MatchType.SINGLES,
+          competitionFormat: CompetitionFormat.SINGLES,
           startTime: '2026-03-01T08:00:00Z',
           endTime: '2026-03-01T18:00:00Z',
           ticketCode: 'abc',
@@ -544,7 +552,7 @@ describe('EventService', () => {
           'e1',
           {
             name: 'Đơn Nam',
-            matchType: MatchType.SINGLES,
+            competitionFormat: CompetitionFormat.SINGLES,
             startTime: '2026-03-01T08:00:00Z',
             endTime: '2026-03-01T18:00:00Z',
             ticketCode: 'ABC',
@@ -560,7 +568,7 @@ describe('EventService', () => {
 
       const dto = {
         name: 'Đơn',
-        matchType: MatchType.SINGLES,
+        competitionFormat: CompetitionFormat.SINGLES,
         startTime: '2026-03-01T08:00:00Z',
         endTime: '2026-03-01T18:00:00Z',
         ticketCode: 'DNM',
