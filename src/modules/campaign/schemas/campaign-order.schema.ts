@@ -3,6 +3,15 @@ import { HydratedDocument, Types } from 'mongoose';
 import { CampaignOrderStatus } from '../enums/campaign-order-status.enum';
 import { Gender } from '../enums/gender.enum';
 
+export class GuardianInfo {
+  fullName: string;
+  dateOfBirth: Date;
+  identityCard: string;
+  email: string;
+  phoneNumber: string;
+  relationship: string;
+}
+
 export class AthleteInfo {
   distance: string;
   unitPrice: number;
@@ -19,6 +28,7 @@ export class AthleteInfo {
   sizeShirt: string;
   club: string;
   nameInBib: string;
+  guardian: GuardianInfo;
   medicalInformationPhoneNumber: string;
   medicalInformationName: string;
   medicalInformation: string;
@@ -96,6 +106,14 @@ export class CampaignOrder {
         sizeShirt: String,
         club: String,
         nameInBib: String,
+        guardian: {
+          fullName: String,
+          dateOfBirth: Date,
+          identityCard: String,
+          email: String,
+          phoneNumber: String,
+          relationship: String,
+        },
         medicalInformationPhoneNumber: String,
         medicalInformationName: String,
         medicalInformation: String,

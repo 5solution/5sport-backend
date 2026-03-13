@@ -3,6 +3,32 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Gender } from '../enums/gender.enum';
 
+export class GuardianInfoDto {
+  @ApiProperty({ description: 'Họ và tên người giám hộ' })
+  @IsString()
+  fullName: string;
+
+  @ApiProperty({ description: 'Ngày sinh người giám hộ' })
+  @IsDateString()
+  dateOfBirth: string;
+
+  @ApiProperty({ description: 'Số CCCD / Hộ chiếu người giám hộ' })
+  @IsString()
+  identityCard: string;
+
+  @ApiProperty({ description: 'Email người giám hộ' })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ description: 'Số điện thoại người giám hộ' })
+  @IsString()
+  phoneNumber: string;
+
+  @ApiProperty({ description: 'Mối quan hệ với người tham gia' })
+  @IsString()
+  relationship: string;
+}
+
 export class AthleteInfoDto {
   @ApiProperty({ example: '5km', description: 'Cự ly đăng ký' })
   @IsString()
@@ -51,6 +77,12 @@ export class AthleteInfoDto {
   @ApiProperty({ description: 'Tên trên BIB' })
   @IsString()
   nameInBib: string;
+
+  @ApiPropertyOptional({ description: 'Thông tin người giám hộ (bắt buộc nếu vận động viên dưới 18 tuổi)', type: GuardianInfoDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => GuardianInfoDto)
+  guardian?: GuardianInfoDto;
 
   @ApiPropertyOptional({ description: 'Size áo (theo danh sách sizeShirtOptions của campaign)' })
   @IsOptional()

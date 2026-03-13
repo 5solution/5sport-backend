@@ -31,6 +31,15 @@ export class CampaignOrderService {
       if (!distanceConfig) {
         throw new BadRequestException(`Cự ly ${athlete.distance}km không tồn tại trong campaign`);
       }
+
+      const dob = new Date(athlete.dateOfBirth);
+      const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+      if (age < 18 && !athlete.guardian) {
+        throw new BadRequestException(
+          `Vận động viên ${athlete.lastName} ${athlete.firstName} dưới 18 tuổi, cần cung cấp thông tin người giám hộ`,
+        );
+      }
+
       const unitPrice = distanceConfig.price;
       totalAmount += unitPrice;
       athletes.push({
