@@ -9,6 +9,7 @@ import { OrderQueryDto } from './dto/order-query.dto';
 import { CampaignOrderStatus } from './enums/campaign-order-status.enum';
 import { SepayProvider } from '../payments/providers/sepay/sepay.provider';
 import { SepayIpnPayloadDto } from './dto/sepay-ipn-payload.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class CampaignOrderService {
@@ -18,6 +19,7 @@ export class CampaignOrderService {
     @InjectModel(CampaignOrder.name) private orderModel: Model<CampaignOrderDocument>,
     @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
     private readonly sepayProvider: SepayProvider,
+    private readonly mailService: MailService,
   ) {}
 
   async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: any; orderCode: string }> {
@@ -197,6 +199,9 @@ export class CampaignOrderService {
 
     if (result.modifiedCount > 0) {
       this.logger.log(`Order ${invoiceNumber} marked as PAID via SePay IPN`);
+
+      // Fire-and-forget: send email in background, status tracked in email_notifications collection
+      this.sendOrderConfirmationEmail(order, payload.transaction.transaction_date, payload.transaction.payment_method);
     }
 
     return { success: true };
@@ -312,6 +317,38 @@ export class CampaignOrderService {
     }
 
     return workbook.xlsx.writeBuffer();
+  }
+
+  private async sendOrderConfirmationEmail(
+    order: CampaignOrderDocument,
+    transactionDate?: string,
+    paymentMethod?: string,
+  ) {
+    try {
+      const campaign = await this.campaignModel.findById(order.campaignId);
+      const paidAt = transactionDate ? new Date(transactionDate) : new Date();
+
+      await this.mailService.sendGroupOrderConfirmation({
+        toEmail: order.email,
+        username: `${order.lastName} ${order.firstName}`,
+        orderCode: order.orderCode,
+        eventName: campaign?.name || '',
+        groupName: campaign?.groupName || '',
+        ticketNumber: order.athletes.length,
+        processDate: paidAt.toLocaleDateString('vi-VN'),
+        totalPrice: order.finalAmount.toLocaleString('vi-VN') + ' VND',
+        paymentMethod: paymentMethod || 'Bank Transfer',
+        endUserEmail: order.email,
+        phone: order.phoneNumber,
+        athletes: order.athletes.map((a) => ({
+          name: `${a.lastName} ${a.firstName}`,
+          distance: a.distance,
+          email: a.email,
+        })),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send confirmation email for order ${order.orderCode}`, error);
+    }
   }
 
   private generateOrderCode(): string {
