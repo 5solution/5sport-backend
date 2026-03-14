@@ -48,6 +48,7 @@ jobs:
           SEPAY_SECRET_KEY: spsk_test_123456
           SEPAY_WEBHOOK_API_KEY: 123456
           APP_PUBLIC_BASE_URL: http://localhost:3000
+          MAILCHIMP_API_KEY: 'test_mailchimp_api_key'
 
   # This pushes the image to GitHub Packages.
   build-push-deploy:
