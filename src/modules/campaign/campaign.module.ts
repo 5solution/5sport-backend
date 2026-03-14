@@ -12,6 +12,7 @@ import { CampaignService } from './campaign.service';
 import { CampaignOrderService } from './campaign-order.service';
 
 import { PaymentsModule } from '../payments/payments.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PaymentsModule } from '../payments/payments.module';
       { name: CampaignOrder.name, schema: CampaignOrderSchema },
     ]),
     PaymentsModule,
+    MailModule,
   ],
   controllers: [
     CampaignController,

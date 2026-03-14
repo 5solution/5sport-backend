@@ -35,6 +35,7 @@ const envVarsSchema = Joi.object()
     SEPAY_SECRET_KEY: Joi.string().required(),
     SEPAY_WEBHOOK_API_KEY: Joi.string().required(),
     APP_PUBLIC_BASE_URL: Joi.string().default('http://localhost:3000'),
+    MAILCHIMP_API_KEY: Joi.string().required(),
   })
   .unknown();
 
@@ -80,6 +81,9 @@ export const env = {
     merchantId: envVars.SEPAY_MERCHANT_ID,
     secretKey: envVars.SEPAY_SECRET_KEY,
     webhookApiKey: envVars.SEPAY_WEBHOOK_API_KEY,
+  },
+  mailchimp: {
+    apiKey: envVars.MAILCHIMP_API_KEY,
   },
   appPublicBaseUrl: envVars.APP_PUBLIC_BASE_URL,
 };
