@@ -20,6 +20,7 @@ import { s3ClientProvider } from './aws.config';
 import { UploadModule } from './upload/upload.module';
 import { SeedModule } from './seed/seed.module';
 import { CampaignModule } from './campaign/campaign.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { CampaignModule } from './campaign/campaign.module';
     UploadModule,
     SeedModule,
     CampaignModule,
+    MailModule,
   ],
   providers: [s3ClientProvider],
 })

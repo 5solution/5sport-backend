@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import * as ExcelJS from 'exceljs';
 import { CampaignOrder, CampaignOrderDocument } from './schemas/campaign-order.schema';
 import { Campaign, CampaignDocument } from './schemas/campaign.schema';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -8,6 +9,7 @@ import { OrderQueryDto } from './dto/order-query.dto';
 import { CampaignOrderStatus } from './enums/campaign-order-status.enum';
 import { SepayProvider } from '../payments/providers/sepay/sepay.provider';
 import { SepayIpnPayloadDto } from './dto/sepay-ipn-payload.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class CampaignOrderService {
@@ -17,6 +19,7 @@ export class CampaignOrderService {
     @InjectModel(CampaignOrder.name) private orderModel: Model<CampaignOrderDocument>,
     @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
     private readonly sepayProvider: SepayProvider,
+    private readonly mailService: MailService,
   ) {}
 
   async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: any; orderCode: string }> {
@@ -31,6 +34,15 @@ export class CampaignOrderService {
       if (!distanceConfig) {
         throw new BadRequestException(`Cự ly ${athlete.distance}km không tồn tại trong campaign`);
       }
+
+      const dob = new Date(athlete.dateOfBirth);
+      const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+      if (age < 18 && !athlete.guardian) {
+        throw new BadRequestException(
+          `Vận động viên ${athlete.lastName} ${athlete.firstName} dưới 18 tuổi, cần cung cấp thông tin người giám hộ`,
+        );
+      }
+
       const unitPrice = distanceConfig.price;
       totalAmount += unitPrice;
       athletes.push({
@@ -187,9 +199,156 @@ export class CampaignOrderService {
 
     if (result.modifiedCount > 0) {
       this.logger.log(`Order ${invoiceNumber} marked as PAID via SePay IPN`);
+
+      // Fire-and-forget: send email in background, status tracked in email_notifications collection
+      this.sendOrderConfirmationEmail(order, payload.transaction.transaction_date, payload.transaction.payment_method);
     }
 
     return { success: true };
+  }
+
+  async exportExcel(campaignId: string, fromDate: string, toDate: string): Promise<ExcelJS.Buffer> {
+    const campaign = await this.campaignModel.findById(campaignId);
+    if (!campaign) throw new NotFoundException('Campaign not found');
+
+    const filter: any = { campaignId: new Types.ObjectId(campaignId) };
+    if (fromDate || toDate) {
+      filter.orderDate = {};
+      if (fromDate) filter.orderDate.$gte = new Date(fromDate);
+      if (toDate) filter.orderDate.$lte = new Date(toDate);
+    }
+
+    const orders = await this.orderModel.find(filter).sort({ orderDate: -1 }).lean();
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Orders');
+
+    sheet.columns = [
+      { header: 'STT', key: 'stt', width: 6 },
+      { header: 'ID', key: 'id', width: 26 },
+      { header: 'Tên sự kiện', key: 'eventName', width: 30 },
+      { header: 'Mã đơn hàng', key: 'orderCode', width: 18 },
+      { header: 'Họ và tên người mua', key: 'buyerName', width: 25 },
+      { header: 'Email người mua', key: 'buyerEmail', width: 25 },
+      { header: 'Số Điện thoại người mua', key: 'buyerPhone', width: 20 },
+      { header: 'Thời gian xử lý', key: 'processedAt', width: 20 },
+      { header: 'Payment Ref', key: 'paymentRef', width: 20 },
+      { header: 'Đơn giá', key: 'unitPrice', width: 12 },
+      { header: 'Số lượng', key: 'quantity', width: 10 },
+      { header: 'Tổng tiền cuối', key: 'finalAmount', width: 15 },
+      { header: 'Cung đường', key: 'distance', width: 12 },
+      { header: 'Họ và tên', key: 'fullName', width: 25 },
+      { header: 'Họ', key: 'lastName', width: 15 },
+      { header: 'Tên', key: 'firstName', width: 15 },
+      { header: 'Ngày sinh', key: 'dateOfBirth', width: 15 },
+      { header: 'Giới tính', key: 'gender', width: 10 },
+      { header: 'CCCD/ Hộ chiếu', key: 'identityCard', width: 18 },
+      { header: 'Quốc tịch', key: 'national', width: 15 },
+      { header: 'Email', key: 'email', width: 25 },
+      { header: 'Địa chỉ', key: 'location', width: 30 },
+      { header: 'Số điện thoại', key: 'phoneNumber', width: 18 },
+      { header: 'Số điện thoại khẩn cấp', key: 'emergencyPhone', width: 20 },
+      { header: 'Câu lạc bộ', key: 'club', width: 15 },
+      { header: 'Trạng thái sức khỏe', key: 'medicalInfo', width: 20 },
+      { header: 'Size áo', key: 'sizeShirt', width: 10 },
+      { header: 'Loại thuốc đang dùng', key: 'typeOfMedicine', width: 20 },
+      { header: 'Nhóm máu', key: 'bloodType', width: 10 },
+      { header: 'Tên trên BIB', key: 'nameInBib', width: 18 },
+      { header: 'Tên người giám hộ (nếu có)', key: 'guardianName', width: 25 },
+      { header: 'Email người giám hộ (nếu có)', key: 'guardianEmail', width: 25 },
+      { header: 'CCCD người giám hộ (nếu có)', key: 'guardianIdentityCard', width: 20 },
+      { header: 'Ngày sinh người giám hộ (nếu có)', key: 'guardianDob', width: 20 },
+      { header: 'SĐT người giám hộ (nếu có)', key: 'guardianPhone', width: 20 },
+      { header: 'Mối quan hệ với người giám hộ (nếu có)', key: 'guardianRelationship', width: 20 },
+      { header: 'Trạng thái vé', key: 'ticketStatus', width: 15 },
+      { header: 'Trạng thái VĐV', key: 'athleteStatus', width: 15 },
+    ];
+
+    const headerRow = sheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.alignment = { horizontal: 'center' };
+
+    let stt = 0;
+    for (const order of orders) {
+      for (const athlete of order.athletes) {
+        stt++;
+        const guardian = (athlete as any).guardian;
+        sheet.addRow({
+          stt,
+          id: (order as any)._id?.toString(),
+          eventName: campaign.name,
+          orderCode: order.orderCode,
+          buyerName: `${order.lastName} ${order.firstName}`,
+          buyerEmail: order.email,
+          buyerPhone: order.phoneNumber,
+          processedAt: order.paidAt ? new Date(order.paidAt).toLocaleString('vi-VN') : '',
+          paymentRef: order.providerTransactionId || '',
+          unitPrice: (athlete as any).unitPrice,
+          quantity: order.athletes.length,
+          finalAmount: order.finalAmount,
+          distance: athlete.distance,
+          fullName: `${athlete.lastName} ${athlete.firstName}`,
+          lastName: athlete.lastName,
+          firstName: athlete.firstName,
+          dateOfBirth: athlete.dateOfBirth ? new Date(athlete.dateOfBirth).toLocaleDateString('vi-VN') : '',
+          gender: athlete.gender,
+          identityCard: athlete.identityCard,
+          national: athlete.national,
+          email: athlete.email,
+          location: athlete.location,
+          phoneNumber: athlete.phoneNumber,
+          emergencyPhone: athlete.medicalInformationPhoneNumber || '',
+          club: athlete.club || '',
+          medicalInfo: athlete.medicalInformation || '',
+          sizeShirt: athlete.sizeShirt || '',
+          typeOfMedicine: athlete.typeOfMedicine || '',
+          bloodType: athlete.bloodType || '',
+          nameInBib: athlete.nameInBib,
+          guardianName: guardian?.fullName || '',
+          guardianEmail: guardian?.email || '',
+          guardianIdentityCard: guardian?.identityCard || '',
+          guardianDob: guardian?.dateOfBirth ? new Date(guardian.dateOfBirth).toLocaleDateString('vi-VN') : '',
+          guardianPhone: guardian?.phoneNumber || '',
+          guardianRelationship: guardian?.relationship || '',
+          ticketStatus: order.paymentStatus,
+          athleteStatus: '',
+        });
+      }
+    }
+
+    return workbook.xlsx.writeBuffer();
+  }
+
+  private async sendOrderConfirmationEmail(
+    order: CampaignOrderDocument,
+    transactionDate?: string,
+    paymentMethod?: string,
+  ) {
+    try {
+      const campaign = await this.campaignModel.findById(order.campaignId);
+      const paidAt = transactionDate ? new Date(transactionDate) : new Date();
+
+      await this.mailService.sendGroupOrderConfirmation({
+        toEmail: order.email,
+        username: `${order.lastName} ${order.firstName}`,
+        orderCode: order.orderCode,
+        eventName: campaign?.name || '',
+        groupName: campaign?.groupName || '',
+        ticketNumber: order.athletes.length,
+        processDate: paidAt.toLocaleDateString('vi-VN'),
+        totalPrice: order.finalAmount.toLocaleString('vi-VN') + ' VND',
+        paymentMethod: paymentMethod || 'Bank Transfer',
+        endUserEmail: order.email,
+        phone: order.phoneNumber,
+        athletes: order.athletes.map((a) => ({
+          name: `${a.lastName} ${a.firstName}`,
+          distance: a.distance,
+          email: a.email,
+        })),
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send confirmation email for order ${order.orderCode}`, error);
+    }
   }
 
   private generateOrderCode(): string {
