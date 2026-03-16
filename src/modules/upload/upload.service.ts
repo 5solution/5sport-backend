@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import {
   S3Client,
   PutObjectCommand,
@@ -13,6 +13,7 @@ export class UploadService {
   constructor(private readonly s3Client: S3Client) {}
 
   async uploadFile(file: Express.Multer.File): Promise<string | false> {
+    if (!file) throw new BadRequestException('No file uploaded. Send as multipart/form-data with field name "file"');
     try {
       const randomString = Math.random().toString(36).substring(2, 15);
       const now = new Date();

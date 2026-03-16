@@ -76,6 +76,11 @@ export class CreateCampaignDto {
   @IsString()
   regulationsUrl?: string;
 
+  @ApiPropertyOptional({ description: 'Nội dung thể lệ (Markdown)' })
+  @IsOptional()
+  @IsString()
+  regulations?: string;
+
   @ApiPropertyOptional({ description: 'Link fanpage' })
   @IsOptional()
   @IsString()

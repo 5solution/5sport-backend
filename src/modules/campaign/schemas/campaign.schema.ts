@@ -51,6 +51,9 @@ export class Campaign {
   @Prop()
   regulationsUrl: string;
 
+  @Prop({ type: String })
+  regulations: string;
+
   @Prop()
   fanpageUrl: string;
 
