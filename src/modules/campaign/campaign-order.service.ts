@@ -352,8 +352,10 @@ export class CampaignOrderService {
   }
 
   private generateOrderCode(): string {
-    const timestamp = Date.now().toString(36).toUpperCase();
+    const isDev = process.env.NODE_ENV !== 'production';
+    const prefix = isDev ? '5SPORTDEV' : '5SPORT';
+    const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `ORD-${timestamp}-${random}`;
+    return `${prefix}-${timestamp}-${random}`;
   }
 }
