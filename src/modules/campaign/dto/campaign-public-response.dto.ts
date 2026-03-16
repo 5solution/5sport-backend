@@ -55,6 +55,9 @@ export class CampaignPublicResponseDto {
   @ApiPropertyOptional({ example: 'https://example.com/regulations.pdf', description: 'Link điều lệ' })
   regulationsUrl?: string;
 
+  @ApiPropertyOptional({ example: '## Thể lệ\n- Điều 1: ...', description: 'Nội dung thể lệ (Markdown)' })
+  regulations?: string;
+
   @ApiPropertyOptional({ example: 'https://facebook.com/5bib', description: 'Link fanpage' })
   fanpageUrl?: string;
 
