@@ -14,7 +14,10 @@ export class UploadService {
 
   async uploadFile(file: Express.Multer.File): Promise<string | false> {
     try {
-      const key = `${Date.now()}-${file.originalname}`;
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const key = `${date}/${randomString}-${file.originalname}`;
 
       const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
