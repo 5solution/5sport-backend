@@ -111,6 +111,7 @@ export class CampaignService {
       zaloGroupUrl: obj.zaloGroupUrl,
       hotline: obj.hotline,
       regulationsUrl: obj.regulationsUrl,
+      regulations: obj.regulations,
       fanpageUrl: obj.fanpageUrl,
       sizeShirtOptions: obj.sizeShirtOptions || [],
       createdAt: obj.createdAt,
