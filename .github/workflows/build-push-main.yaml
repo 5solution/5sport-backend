@@ -57,3 +57,28 @@ jobs:
           docker push $IMAGE_NAME:$BRANCH_NAME
           docker push $IMAGE_NAME:$BRANCH_NAME-$FULL_COMMIT_HASH
           docker push $IMAGE_NAME:$BRANCH_NAME-$SHORT_COMMIT_HASH
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-push
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: set env
+        run: |
+          SHORT_COMMIT_HASH="${FULL_COMMIT_HASH:0:8}"
+          echo "SHORT_COMMIT_HASH=$SHORT_COMMIT_HASH" >> $GITHUB_ENV
+          echo "FULL_COMMIT_HASH=$FULL_COMMIT_HASH" >> $GITHUB_ENV
+      - name: deploy
+        run: |
+          echo "${{ secrets.CI_PRIVATE_KEY }}" > ./id_rsa && chmod 600 ./id_rsa
+          ssh -p 6060 -oStrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.IP_SEVER }} "set -euxo pipefail; echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u LongDao-fivebib --password-stdin; /usr/local/bin/5sport-be-prod-deploy.sh $BRANCH_NAME-$FULL_COMMIT_HASH"
+      - name: git tag
+        run: |
+          TAG_NAME="main-server-all"
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git tag -f $TAG_NAME
+          git push -f origin $TAG_NAME
