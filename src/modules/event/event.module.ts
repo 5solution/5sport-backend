@@ -17,6 +17,7 @@ import { Stage } from './entities/stage.entity';
 import { EventController } from './event.controller';
 import { PublicEventController } from './public-event.controller';
 import { MatchController } from './match.controller';
+import { MatchScoreController } from './match-score.controller';
 import { ParticipantController } from './participant.controller';
 import { StageController } from './stage.controller';
 
@@ -51,6 +52,7 @@ import { FlexStrategy } from './strategies/flex.strategy';
     EventController,
     PublicEventController,
     MatchController,
+    MatchScoreController,
     ParticipantController,
     StageController,
   ],
