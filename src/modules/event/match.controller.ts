@@ -75,9 +75,6 @@ export class MatchController {
   }
 
   @Post(':id/start')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.ORGANIZER)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Start match' })
   @ApiParam({ name: 'eventId', description: 'Event ID' })
   @ApiParam({ name: 'id', description: 'Match ID' })
@@ -91,9 +88,6 @@ export class MatchController {
   }
 
   @Post(':id/end')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.ORGANIZER)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'End match' })
   @ApiParam({ name: 'eventId', description: 'Event ID' })
   @ApiParam({ name: 'id', description: 'Match ID' })

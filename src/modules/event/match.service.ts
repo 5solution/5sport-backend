@@ -32,7 +32,7 @@ export class MatchService {
   async findOne(id: string): Promise<Match> {
     const match = await this.matchRepository.findOne({
       where: { id },
-      relations: ['session', 'scores'],
+      relations: ['session', 'scores', 'team1Player1', 'team1Player2', 'team2Player1', 'team2Player2'],
     });
 
     if (!match) {
