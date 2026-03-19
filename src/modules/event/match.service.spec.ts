@@ -92,7 +92,7 @@ describe('MatchService', () => {
       expect(result).toEqual(match);
       expect(mockMatchRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'match-123' },
-        relations: ['session', 'scores'],
+        relations: ['session', 'scores', 'team1Player1', 'team1Player2', 'team2Player1', 'team2Player2'],
       });
     });
 
