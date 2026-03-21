@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Body, Param, Query, Res, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiCreatedResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { CampaignOrderService } from './campaign-order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -25,8 +39,25 @@ export class CampaignOrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.ORGANIZER)
   @ApiBearerAuth()
-  findAll(@Param('campaignId') campaignId: string, @Query() query: OrderQueryDto) {
+  findAll(
+    @Param('campaignId') campaignId: string,
+    @Query() query: OrderQueryDto,
+  ) {
     return this.orderService.findAll(campaignId, query);
+  }
+
+  @Post(':orderCode/resend-email')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.ORGANIZER)
+  @ApiBearerAuth()
+  resendEmail(
+    @Param('campaignId') campaignId: string,
+    @Param('orderCode') orderCode: string,
+  ) {
+    return this.orderService.resendOrderConfirmationEmail(
+      campaignId,
+      orderCode,
+    );
   }
 
   @Get(':id')
@@ -49,9 +80,14 @@ export class CampaignOrderController {
     @Query('toDate') toDate: string,
     @Res() res: Response,
   ) {
-    const buffer = await this.orderService.exportExcel(campaignId, fromDate, toDate);
+    const buffer = await this.orderService.exportExcel(
+      campaignId,
+      fromDate,
+      toDate,
+    );
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename=orders-${campaignId}.xlsx`,
     });
     res.end(buffer);
