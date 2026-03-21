@@ -10,6 +10,9 @@ import { CampaignOrderStatus } from './enums/campaign-order-status.enum';
 import { SepayProvider } from '../payments/providers/sepay/sepay.provider';
 import { SepayIpnPayloadDto } from './dto/sepay-ipn-payload.dto';
 import { MailService } from '../mail/mail.service';
+import { RabbitMQPublisherService } from '../rabbitmq/rabbitmq-publisher.service';
+import { RoutingKey } from '../rabbitmq/constants/events';
+import { OrderPaidPayload } from '../rabbitmq/dto/event-payloads';
 
 @Injectable()
 export class CampaignOrderService {
@@ -20,6 +23,7 @@ export class CampaignOrderService {
     @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
     private readonly sepayProvider: SepayProvider,
     private readonly mailService: MailService,
+    private readonly rabbitMQPublisher: RabbitMQPublisherService,
   ) {}
 
   async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: any; orderCode: string }> {
@@ -202,6 +206,21 @@ export class CampaignOrderService {
 
       // Fire-and-forget: send email in background, status tracked in email_notifications collection
       this.sendOrderConfirmationEmail(order, payload.transaction.transaction_date, payload.transaction.payment_method);
+
+      // Publish order.paid event to RabbitMQ for Telegram notification
+      const campaign = await this.campaignModel.findById(order.campaignId);
+      this.rabbitMQPublisher.publish<OrderPaidPayload>(RoutingKey.ORDER_PAID, {
+        orderCode: order.orderCode,
+        buyerName: `${order.lastName} ${order.firstName}`,
+        buyerEmail: order.email,
+        buyerPhone: order.phoneNumber,
+        eventName: campaign?.name || '',
+        totalAmount: order.finalAmount,
+        athleteCount: order.athletes.length,
+        paymentMethod: payload.transaction.payment_method || 'Bank Transfer',
+        transactionId: payload.transaction.transaction_id,
+        paidAt: payload.transaction.transaction_date || new Date().toISOString(),
+      });
     }
 
     return { success: true };

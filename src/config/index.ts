@@ -36,6 +36,8 @@ const envVarsSchema = Joi.object()
     SEPAY_WEBHOOK_API_KEY: Joi.string().required(),
     APP_PUBLIC_BASE_URL: Joi.string().default('http://localhost:3000'),
     MAILCHIMP_API_KEY: Joi.string().required(),
+
+    RABBITMQ_URL: Joi.string().required(),
   })
   .unknown();
 
@@ -86,6 +88,7 @@ export const env = {
     apiKey: envVars.MAILCHIMP_API_KEY,
   },
   appPublicBaseUrl: envVars.APP_PUBLIC_BASE_URL,
+  rabbitmqUrl: envVars.RABBITMQ_URL,
 };
 
 console.log('Configuration loaded successfully:', {
