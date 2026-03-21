@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Match, MatchScore, EventParticipant } from './entities';
-import { CreateMatchDto, UpdateMatchDto, UpdateScoreDto } from './dto/match';
+import { CreateMatchDto, UpdateMatchDto, UpdateScoreDto, UpsertMatchScoreDto } from './dto/match';
 import { MatchStatus } from './entities/match.entity';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class MatchService {
   async findOne(id: string): Promise<Match> {
     const match = await this.matchRepository.findOne({
       where: { id },
-      relations: ['session', 'scores'],
+      relations: ['session', 'scores', 'team1Player1', 'team1Player2', 'team2Player1', 'team2Player2'],
     });
 
     if (!match) {
@@ -142,6 +142,40 @@ export class MatchService {
     }
 
     await this.matchRepository.save(match);
+  }
+
+  async upsertScore(matchId: string, setNumber: number, dto: UpsertMatchScoreDto): Promise<MatchScore> {
+    const match = await this.matchRepository.findOne({ where: { id: matchId } });
+    if (!match) {
+      throw new NotFoundException(`Match ${matchId} not found`);
+    }
+    if (match.status !== MatchStatus.IN_PROGRESS) {
+      throw new BadRequestException('Match must be IN_PROGRESS to modify scores');
+    }
+
+    const existing = await this.scoreRepository.findOne({ where: { matchId, setNumber } });
+
+    if (!existing && setNumber > 1) {
+      const prevSet = await this.scoreRepository.findOne({
+        where: { matchId, setNumber: setNumber - 1 },
+      });
+      if (!prevSet) {
+        throw new BadRequestException(
+          `Set ${setNumber - 1} must exist before creating set ${setNumber}`,
+        );
+      }
+    }
+
+    let score = existing;
+    if (score) {
+      Object.assign(score, dto);
+    } else {
+      score = this.scoreRepository.create({ matchId, setNumber, ...dto });
+    }
+
+    const savedScore = await this.scoreRepository.save(score);
+    await this.updateMatchAggregateScores(matchId);
+    return savedScore;
   }
 
   async getScores(matchId: string): Promise<MatchScore[]> {

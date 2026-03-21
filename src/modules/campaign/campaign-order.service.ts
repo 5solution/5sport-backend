@@ -319,6 +319,26 @@ export class CampaignOrderService {
     return workbook.xlsx.writeBuffer();
   }
 
+  async resendOrderConfirmationEmail(campaignId: string, orderCode: string): Promise<{ success: true }> {
+    const order = await this.orderModel.findOne({
+      orderCode,
+      campaignId: new Types.ObjectId(campaignId),
+    });
+    if (!order) throw new NotFoundException('Order not found');
+
+    if (order.paymentStatus !== CampaignOrderStatus.PAID) {
+      throw new BadRequestException('Only paid orders can receive confirmation emails');
+    }
+
+    await this.sendOrderConfirmationEmail(
+      order,
+      order.paidAt?.toISOString(),
+      (order.paymentMetadata as any)?.paymentMethod,
+    );
+
+    return { success: true };
+  }
+
   private async sendOrderConfirmationEmail(
     order: CampaignOrderDocument,
     transactionDate?: string,

@@ -101,12 +101,20 @@ export class MailService {
         },
       });
 
+      // Sanitize response to remove circular references before saving to BSON
+      let sanitizedResponse: any;
+      try {
+        sanitizedResponse = JSON.parse(JSON.stringify(response));
+      } catch {
+        sanitizedResponse = { raw: String(response) };
+      }
+
       await this.notificationModel.updateOne(
         { _id: notification._id },
         {
           $set: {
             status: EmailNotificationStatus.SENT,
-            response,
+            response: sanitizedResponse,
             sentAt: new Date(),
           },
         },
