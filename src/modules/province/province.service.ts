@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { FindOptionsWhere, Repository, ILike } from 'typeorm';
 import { Province } from './entities/province.entity';
 import { Ward } from './entities/ward.entity';
 
@@ -39,7 +39,7 @@ export class ProvinceService {
   }
 
   async listWards(provinceCode?: number, search?: string): Promise<Ward[]> {
-    const where: any = {};
+    const where: FindOptionsWhere<Ward> = {};
     if (provinceCode) where.province_code = provinceCode;
     if (search) {
       return this.wardRepo.find({

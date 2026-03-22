@@ -11,13 +11,17 @@ import {
 import {
   ApiTags,
   ApiBearerAuth,
-  ApiCreatedResponse,
   ApiQuery,
 } from '@nestjs/swagger';
+import {
+  ApiSuccessResponse,
+  ApiCreatedSuccessResponse,
+} from 'src/common/decorators/api-success-response.decorator';
 import { Response } from 'express';
 import { CampaignOrderService } from './campaign-order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CreateOrderResponseDto } from './dto/create-order-response.dto';
+import { OrderResponseDto } from './dto/order-response.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
@@ -30,7 +34,9 @@ export class CampaignOrderController {
   constructor(private readonly orderService: CampaignOrderService) {}
 
   @Post()
-  @ApiCreatedResponse({ type: CreateOrderResponseDto })
+  @ApiCreatedSuccessResponse(CreateOrderResponseDto, {
+    description: 'Tạo đơn hàng mới',
+  })
   create(@Param('campaignId') campaignId: string, @Body() dto: CreateOrderDto) {
     return this.orderService.create(campaignId, dto);
   }
@@ -39,6 +45,18 @@ export class CampaignOrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.ORGANIZER)
   @ApiBearerAuth()
+  @ApiSuccessResponse(null, {
+    description: 'Danh sách đơn hàng (phân trang)',
+    schema: {
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/OrderResponseDto' },
+        },
+        meta: { type: 'object' },
+      },
+    },
+  })
   findAll(
     @Param('campaignId') campaignId: string,
     @Query() query: OrderQueryDto,
@@ -50,6 +68,9 @@ export class CampaignOrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.ORGANIZER)
   @ApiBearerAuth()
+  @ApiSuccessResponse(null, {
+    description: 'Gửi lại email xác nhận đơn hàng',
+  })
   resendEmail(
     @Param('campaignId') campaignId: string,
     @Param('orderCode') orderCode: string,
@@ -64,6 +85,9 @@ export class CampaignOrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.ORGANIZER)
   @ApiBearerAuth()
+  @ApiSuccessResponse(OrderResponseDto, {
+    description: 'Chi tiết đơn hàng',
+  })
   findOne(@Param('campaignId') campaignId: string, @Param('id') id: string) {
     return this.orderService.findById(campaignId, id);
   }

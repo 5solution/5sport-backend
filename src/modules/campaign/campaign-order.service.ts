@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import * as ExcelJS from 'exceljs';
 import { CampaignOrder, CampaignOrderDocument } from './schemas/campaign-order.schema';
 import { Campaign, CampaignDocument } from './schemas/campaign.schema';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { AthleteInfoDto, CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { CampaignOrderStatus } from './enums/campaign-order-status.enum';
 import { SepayProvider } from '../payments/providers/sepay/sepay.provider';
@@ -26,11 +26,11 @@ export class CampaignOrderService {
     private readonly rabbitMQPublisher: RabbitMQPublisherService,
   ) {}
 
-  async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: any; orderCode: string }> {
+  async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: Types.ObjectId; orderCode: string }> {
     const campaign = await this.campaignModel.findById(campaignId);
     if (!campaign) throw new NotFoundException('Campaign not found');
 
-    const athletes: any[] = [];
+    const athletes: (AthleteInfoDto & { unitPrice: number })[] = [];
     let totalAmount = 0;
 
     for (const athlete of dto.athletes) {
@@ -77,7 +77,8 @@ export class CampaignOrderService {
   }
 
   async findAll(campaignId: string, query: OrderQueryDto): Promise<{ data: CampaignOrderDocument[]; total: number }> {
-    const filter: any = { campaignId: new Types.ObjectId(campaignId) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: Record<string, any> = { campaignId: new Types.ObjectId(campaignId) };
     if (query.paymentStatus) filter.paymentStatus = query.paymentStatus;
     if (query.fromDate || query.toDate) {
       filter.orderDate = {};
@@ -230,7 +231,8 @@ export class CampaignOrderService {
     const campaign = await this.campaignModel.findById(campaignId);
     if (!campaign) throw new NotFoundException('Campaign not found');
 
-    const filter: any = { campaignId: new Types.ObjectId(campaignId) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: Record<string, any> = { campaignId: new Types.ObjectId(campaignId) };
     if (fromDate || toDate) {
       filter.orderDate = {};
       if (fromDate) filter.orderDate.$gte = new Date(fromDate);

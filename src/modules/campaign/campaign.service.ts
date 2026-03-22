@@ -8,6 +8,7 @@ import { UpdateCampaignStatusDto } from './dto/update-campaign-status.dto';
 import { CampaignPublicResponseDto } from './dto/campaign-public-response.dto';
 import { CampaignStatus } from './enums/campaign-status.enum';
 import { Role } from 'src/common/enums/role.enum';
+import { RequestUser } from 'src/common/interfaces/request-user.interface';
 import { PaginatedResponseDto, PaginationQueryDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
@@ -23,7 +24,7 @@ export class CampaignService {
     return campaign.save();
   }
 
-  async findAll(user: any): Promise<CampaignDocument[]> {
+  async findAll(user: RequestUser): Promise<CampaignDocument[]> {
     if (user.role === Role.ADMIN) {
       return this.campaignModel.find().sort({ createdAt: -1 });
     }
@@ -61,7 +62,7 @@ export class CampaignService {
     return this.toCampaignPublicResponse(campaign);
   }
 
-  async update(id: string, user: any, dto: UpdateCampaignDto): Promise<CampaignDocument> {
+  async update(id: string, user: RequestUser, dto: UpdateCampaignDto): Promise<CampaignDocument> {
     const campaign = await this.findById(id);
     this.assertOwnership(campaign, user);
     if (dto.slug && dto.slug !== campaign.slug) {
@@ -72,7 +73,7 @@ export class CampaignService {
     return campaign.save();
   }
 
-  async remove(id: string, user: any): Promise<void> {
+  async remove(id: string, user: RequestUser): Promise<void> {
     const campaign = await this.findById(id);
     if (user.role !== Role.ADMIN) throw new ForbiddenException('Only admin can delete campaigns');
     if (campaign.status !== CampaignStatus.DRAFT) {
@@ -81,21 +82,21 @@ export class CampaignService {
     await campaign.deleteOne();
   }
 
-  async updateStatus(id: string, user: any, dto: UpdateCampaignStatusDto): Promise<CampaignDocument> {
+  async updateStatus(id: string, user: RequestUser, dto: UpdateCampaignStatusDto): Promise<CampaignDocument> {
     const campaign = await this.findById(id);
     this.assertOwnership(campaign, user);
     campaign.status = dto.status;
     return campaign.save();
   }
 
-  private assertOwnership(campaign: CampaignDocument, user: any): void {
+  private assertOwnership(campaign: CampaignDocument, user: RequestUser): void {
     if (user.role !== Role.ADMIN && campaign.creatorId !== user.id) {
       throw new ForbiddenException('You do not own this campaign');
     }
   }
 
   private toCampaignPublicResponse(campaign: CampaignDocument): CampaignPublicResponseDto {
-    const obj = campaign.toObject() as any;
+    const obj: Record<string, any> = campaign.toObject();
     return {
       id: obj._id.toString(),
       name: obj.name,
