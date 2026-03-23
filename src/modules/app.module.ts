@@ -22,6 +22,7 @@ import { SeedModule } from './seed/seed.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { MailModule } from './mail/mail.module';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
     CampaignModule,
     MailModule,
     RabbitMQModule.forRoot(),
+    FeedbackModule,
   ],
   providers: [s3ClientProvider],
 })
