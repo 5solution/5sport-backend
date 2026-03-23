@@ -21,6 +21,8 @@ import { UploadModule } from './upload/upload.module';
 import { SeedModule } from './seed/seed.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { MailModule } from './mail/mail.module';
+import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
+import { FeedbackModule } from './feedback/feedback.module';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { MailModule } from './mail/mail.module';
     SeedModule,
     CampaignModule,
     MailModule,
+    RabbitMQModule.forRoot(),
+    FeedbackModule,
   ],
   providers: [s3ClientProvider],
 })

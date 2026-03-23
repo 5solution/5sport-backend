@@ -21,7 +21,7 @@ import {
   ApiSuccessResponse,
   ApiCreatedSuccessResponse,
 } from 'src/common/decorators/api-success-response.decorator';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -123,8 +123,8 @@ export class AuthController {
     summary: 'Google OAuth callback',
     description: 'Handle Google OAuth callback and redirect with JWT token',
   })
-  async googleAuthCallback(@Req() req: any, @Res() res: Response) {
-    const user = req.user;
+  async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as User;
     const token = this.authService.generateToken(user);
     res.redirect(
       `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/success?token=${token}`,

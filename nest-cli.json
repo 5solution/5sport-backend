@@ -10,5 +10,16 @@
         "outDir": "dist"
       }
     ]
+  },
+  "projects": {
+    "consumer": {
+      "type": "application",
+      "root": "src",
+      "entryFile": "consumer",
+      "sourceRoot": "src",
+      "compilerOptions": {
+        "tsConfigPath": "tsconfig.build.json"
+      }
+    }
   }
 }

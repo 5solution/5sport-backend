@@ -30,6 +30,7 @@ import { PaginationQueryDto } from 'src/common/dto/pagination.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
 import { User } from 'src/modules/user/user.entity';
 
+import { EventMedia } from './entities/event-media.entity';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -536,9 +537,9 @@ export class EventController {
     @Param('id') id: string,
     @Body()
     body: { type: string; url: string; fileSize: number; mimeType: string },
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
   ) {
-    return this.eventService.addMedia(id, body as any, user.id, user.role);
+    return this.eventService.addMedia(id, body as Partial<EventMedia>, user.id, user.role);
   }
 
   @Delete(':id/media/:mediaId')
@@ -549,7 +550,7 @@ export class EventController {
   deleteMedia(
     @Param('id') id: string,
     @Param('mediaId') mediaId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
   ) {
     return this.eventService.deleteMedia(id, mediaId, user.id, user.role);
   }

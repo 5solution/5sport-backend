@@ -292,7 +292,7 @@ describe('AuthService', () => {
         where: { id: 'user-uuid-1' },
       });
       expect(result).toBeDefined();
-      expect(result!.password).toBeUndefined();
+      expect((result as any)?.password).toBeUndefined();
     });
 
     it('should return null for non-existent user', async () => {
@@ -310,7 +310,7 @@ describe('AuthService', () => {
       emails: [{ value: 'google@example.com' }],
       displayName: 'Google User',
       photos: [{ value: 'https://example.com/photo.jpg' }],
-    };
+    } as any;
 
     it('should return existing user by googleId', async () => {
       const existingUser = {

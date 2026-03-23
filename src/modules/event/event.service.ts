@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, In, LessThan, LessThanOrEqual, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, LessThan, LessThanOrEqual, Repository } from 'typeorm';
 import {
   PaginatedResponseDto,
   PaginationQueryDto,
@@ -133,7 +133,7 @@ export class EventService {
     const { page = 1, limit = 10, sportType, search } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {
+    const where: FindOptionsWhere<Event> = {
       status: In([EventStatus.PUBLISHED, EventStatus.LIVE]),
     };
 

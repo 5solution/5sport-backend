@@ -4,12 +4,15 @@ import { Model, Types } from 'mongoose';
 import * as ExcelJS from 'exceljs';
 import { CampaignOrder, CampaignOrderDocument } from './schemas/campaign-order.schema';
 import { Campaign, CampaignDocument } from './schemas/campaign.schema';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { AthleteInfoDto, CreateOrderDto } from './dto/create-order.dto';
 import { OrderQueryDto } from './dto/order-query.dto';
 import { CampaignOrderStatus } from './enums/campaign-order-status.enum';
 import { SepayProvider } from '../payments/providers/sepay/sepay.provider';
 import { SepayIpnPayloadDto } from './dto/sepay-ipn-payload.dto';
 import { MailService } from '../mail/mail.service';
+import { RabbitMQPublisherService } from '../rabbitmq/rabbitmq-publisher.service';
+import { RoutingKey } from '../rabbitmq/constants/events';
+import { OrderPaidPayload } from '../rabbitmq/dto/event-payloads';
 
 @Injectable()
 export class CampaignOrderService {
@@ -20,13 +23,14 @@ export class CampaignOrderService {
     @InjectModel(Campaign.name) private campaignModel: Model<CampaignDocument>,
     private readonly sepayProvider: SepayProvider,
     private readonly mailService: MailService,
+    private readonly rabbitMQPublisher: RabbitMQPublisherService,
   ) {}
 
-  async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: any; orderCode: string }> {
+  async create(campaignId: string, dto: CreateOrderDto): Promise<{ campaignId: Types.ObjectId; orderCode: string }> {
     const campaign = await this.campaignModel.findById(campaignId);
     if (!campaign) throw new NotFoundException('Campaign not found');
 
-    const athletes: any[] = [];
+    const athletes: (AthleteInfoDto & { unitPrice: number })[] = [];
     let totalAmount = 0;
 
     for (const athlete of dto.athletes) {
@@ -73,7 +77,8 @@ export class CampaignOrderService {
   }
 
   async findAll(campaignId: string, query: OrderQueryDto): Promise<{ data: CampaignOrderDocument[]; total: number }> {
-    const filter: any = { campaignId: new Types.ObjectId(campaignId) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: Record<string, any> = { campaignId: new Types.ObjectId(campaignId) };
     if (query.paymentStatus) filter.paymentStatus = query.paymentStatus;
     if (query.fromDate || query.toDate) {
       filter.orderDate = {};
@@ -202,6 +207,21 @@ export class CampaignOrderService {
 
       // Fire-and-forget: send email in background, status tracked in email_notifications collection
       this.sendOrderConfirmationEmail(order, payload.transaction.transaction_date, payload.transaction.payment_method);
+
+      // Publish order.paid event to RabbitMQ for Telegram notification
+      const campaign = await this.campaignModel.findById(order.campaignId);
+      this.rabbitMQPublisher.publish<OrderPaidPayload>(RoutingKey.ORDER_PAID, {
+        orderCode: order.orderCode,
+        buyerName: `${order.lastName} ${order.firstName}`,
+        buyerEmail: order.email,
+        buyerPhone: order.phoneNumber,
+        eventName: campaign?.name || '',
+        totalAmount: order.finalAmount,
+        athleteCount: order.athletes.length,
+        paymentMethod: payload.transaction.payment_method || 'Bank Transfer',
+        transactionId: payload.transaction.transaction_id,
+        paidAt: payload.transaction.transaction_date || new Date().toISOString(),
+      });
     }
 
     return { success: true };
@@ -211,7 +231,8 @@ export class CampaignOrderService {
     const campaign = await this.campaignModel.findById(campaignId);
     if (!campaign) throw new NotFoundException('Campaign not found');
 
-    const filter: any = { campaignId: new Types.ObjectId(campaignId) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: Record<string, any> = { campaignId: new Types.ObjectId(campaignId) };
     if (fromDate || toDate) {
       filter.orderDate = {};
       if (fromDate) filter.orderDate.$gte = new Date(fromDate);

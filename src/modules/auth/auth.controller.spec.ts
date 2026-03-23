@@ -147,7 +147,7 @@ describe('AuthController', () => {
       const originalFrontendUrl = process.env.FRONTEND_URL;
       process.env.FRONTEND_URL = 'http://localhost:3000';
 
-      await controller.googleAuthCallback(mockReq, mockRes);
+      await controller.googleAuthCallback(mockReq as any, mockRes as any);
 
       expect(authService.generateToken).toHaveBeenCalledWith(mockUser);
       expect(mockRes.redirect).toHaveBeenCalledWith(
@@ -173,7 +173,7 @@ describe('AuthController', () => {
       const originalFrontendUrl = process.env.FRONTEND_URL;
       delete process.env.FRONTEND_URL;
 
-      await controller.googleAuthCallback(mockReq, mockRes);
+      await controller.googleAuthCallback(mockReq as any, mockRes as any);
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
         'http://localhost:3000/auth/success?token=mock-jwt-token',

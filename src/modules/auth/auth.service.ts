@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { Role } from 'src/common/enums/role.enum';
+import { TokenPayload } from 'google-auth-library';
+import { Profile } from 'passport-google-oauth20';
 import { Repository } from 'typeorm';
 
 import { BotService } from '../bot/bot.service';
@@ -170,7 +172,7 @@ export class AuthService {
     };
   }
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<Record<string, unknown> | null> {
     const user = await this.userRepository.findOne({
       where: { email },
     });
@@ -185,7 +187,7 @@ export class AuthService {
     return null;
   }
 
-  async findOrCreateGoogleUser(profile: any) {
+  async findOrCreateGoogleUser(profile: Profile) {
     const { id: googleId, emails, displayName, photos } = profile;
     const email = emails?.[0]?.value;
     const avatarUrl = photos?.[0]?.value;
@@ -256,7 +258,7 @@ export class AuthService {
     return payload;
   }
 
-  private async findOrCreateGoogleUserFromPayload(payload: any): Promise<User> {
+  private async findOrCreateGoogleUserFromPayload(payload: TokenPayload): Promise<User> {
     const googleId = payload.sub;
     const email = payload.email;
     const displayName = payload.name;
