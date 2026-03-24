@@ -103,6 +103,22 @@ export class MatchController {
     return await this.matchService.endMatch(id, winnerTeam);
   }
 
+  @Post(':id/close')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Close match (admin only)' })
+  @ApiParam({ name: 'eventId', description: 'Event ID' })
+  @ApiParam({ name: 'id', description: 'Match ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Match closed',
+    type: Match,
+  })
+  async close(@Param('id', ParseUUIDPipe) id: string): Promise<Match> {
+    return await this.matchService.closeMatch(id);
+  }
+
   @Patch(':id/score')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.ORGANIZER)

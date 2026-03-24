@@ -68,18 +68,35 @@ export class MatchService {
 
   async endMatch(id: string, winnerTeam?: number): Promise<Match> {
     const match = await this.findOne(id);
-    
+
     if (match.status !== MatchStatus.IN_PROGRESS) {
       throw new BadRequestException('Match can only be ended from IN_PROGRESS status');
     }
 
     match.status = MatchStatus.COMPLETED;
     match.endTime = new Date();
-    
+
     if (winnerTeam) {
       match.winnerTeam = winnerTeam;
     }
-    
+
+    return await this.matchRepository.save(match);
+  }
+
+  async closeMatch(id: string): Promise<Match> {
+    const match = await this.findOne(id);
+
+    if (match.status === MatchStatus.CANCELLED) {
+      throw new BadRequestException('Match is already cancelled');
+    }
+
+    if (match.status === MatchStatus.COMPLETED) {
+      throw new BadRequestException('Match is already completed');
+    }
+
+    match.status = MatchStatus.CANCELLED;
+    match.endTime = new Date();
+
     return await this.matchRepository.save(match);
   }
 
