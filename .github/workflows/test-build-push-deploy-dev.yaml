@@ -49,6 +49,7 @@ jobs:
           SEPAY_WEBHOOK_API_KEY: 123456
           APP_PUBLIC_BASE_URL: http://localhost:3000
           MAILCHIMP_API_KEY: 'test_mailchimp_api_key'
+          RABBITMQ_URL: amqp://guest:guest@localhost:5672
 
   # This pushes the image to GitHub Packages.
   build-push-deploy:
