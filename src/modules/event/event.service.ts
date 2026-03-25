@@ -37,6 +37,7 @@ import { ReorderDto } from './dto/reorder.dto';
 
 import { EventStatus } from './enums/event-status.enum';
 import { CompetitionFormat } from './enums/competition-format.enum';
+import { MediaType } from './enums/media-type.enum';
 
 import { validateTimeline } from './validators/timeline.validator';
 import { validateScoringConfig } from './validators/scoring-config.validator';
@@ -734,7 +735,16 @@ export class EventService {
     this.assertOwnership(event, userId, userRole);
 
     const media = this.mediaRepo.create({ ...mediaData, eventId });
-    return this.mediaRepo.save(media);
+    const saved = await this.mediaRepo.save(media);
+
+    if (mediaData.type === MediaType.WALLPAPER && mediaData.url) {
+      await this.eventRepo.update(eventId, {
+        bannerImageUrl: mediaData.url,
+        bannerCtaUrl: mediaData.url,
+      });
+    }
+
+    return saved;
   }
 
   async deleteMedia(

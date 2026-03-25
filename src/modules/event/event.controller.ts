@@ -38,6 +38,7 @@ import { CreateEventSessionDto } from './dto/create-event-session.dto';
 import { UpdateEventSessionDto } from './dto/update-event-session.dto';
 import { CreateTicketTierDto } from './dto/create-ticket-tier.dto';
 import { UpdateTicketTierDto } from './dto/update-ticket-tier.dto';
+import { AddMediaDto } from './dto/add-media.dto';
 import { CreateCustomFieldDto } from './dto/create-custom-field.dto';
 import { UpdateCustomFieldDto } from './dto/update-custom-field.dto';
 import { ScoringConfigDto } from './dto/scoring-config.dto';
@@ -533,10 +534,10 @@ export class EventController {
   @Roles(Role.ADMIN, Role.ORGANIZER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Add media to event' })
+  @ApiCreatedSuccessResponse(EventMedia)
   addMedia(
     @Param('id') id: string,
-    @Body()
-    body: { type: string; url: string; fileSize: number; mimeType: string },
+    @Body() body: AddMediaDto,
     @CurrentUser() user: User,
   ) {
     return this.eventService.addMedia(id, body as Partial<EventMedia>, user.id, user.role);
