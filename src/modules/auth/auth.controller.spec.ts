@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock express before importing the controller
 vi.mock('express', () => ({
+  Request: class Request {},
   Response: class Response {},
 }));
 
