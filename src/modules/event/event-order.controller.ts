@@ -17,6 +17,7 @@ import { Request } from 'express';
 import { EventOrderService } from './event-order.service';
 import { CreateEventOrderDto, InitPaymentDto } from './dto/create-event-order.dto';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt-auth.guard';
+import { JwtOptionalGuard } from 'src/modules/auth/guards/jwt-optional.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
@@ -28,14 +29,16 @@ export class EventOrderController {
   constructor(private readonly orderService: EventOrderService) {}
 
   @Post()
+  @UseGuards(JwtOptionalGuard)
   @ApiCreatedSuccessResponse(null, {
     description: 'Tạo đơn hàng đăng ký sự kiện',
   })
   create(
     @Param('eventId') eventId: string,
     @Body() dto: CreateEventOrderDto,
+    @CurrentUser() user: any,
   ) {
-    return this.orderService.create(eventId, dto);
+    return this.orderService.create(eventId, dto, user?.id);
   }
 
   @Post(':orderCode/payment/init')

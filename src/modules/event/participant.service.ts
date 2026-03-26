@@ -59,6 +59,14 @@ export class ParticipantService {
     });
   }
 
+  async findByUser(userId: string): Promise<EventParticipant[]> {
+    return await this.participantRepository.find({
+      where: { userId },
+      relations: ['event', 'session', 'athlete', 'partner'],
+      order: { registrationDate: 'DESC' },
+    });
+  }
+
   async findOne(id: string): Promise<EventParticipant> {
     const participant = await this.participantRepository.findOne({
       where: { id },

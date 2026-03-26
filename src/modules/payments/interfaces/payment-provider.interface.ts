@@ -25,6 +25,7 @@ export interface PaymentRequestParams {
 export interface PaymentUrlResponse {
   paymentUrl?: string;
   paymentId?: string;
+  formHtml?: string;
   qrCodeData?: string;
   accountInfo?: {
     accountNumber: string;

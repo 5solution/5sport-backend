@@ -30,8 +30,7 @@ export class PayxProvider implements IPaymentProvider {
   async createPayment(
     params: PaymentRequestParams,
   ): Promise<PaymentUrlResponse> {
-    const displayMode =
-      params.displayMode || PaymentDisplayMode.MERCHANT_HOSTED;
+    const displayMode = params.displayMode || PaymentDisplayMode.HOSTED_FORM;
 
     // Validate returnUrl for hosted_form mode
     if (displayMode === PaymentDisplayMode.HOSTED_FORM && !params.returnUrl) {
@@ -39,7 +38,7 @@ export class PayxProvider implements IPaymentProvider {
     }
 
     const paymentMethod = this.mapPaymentMethod(params.paymentMethod);
-    const createdDate = new Date().toISOString();
+    const createdDate = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
     const expireDate = this.calculateExpireDate();
 
     const requestData = {
@@ -78,23 +77,43 @@ export class PayxProvider implements IPaymentProvider {
         `[PAYX] Creating payment with request: ${JSON.stringify(requestData)}`,
       );
 
+      const baseUrl = this.config.apiUrl.replace(/\/api\/v1$/, '').replace(/\/$/, '');
+
       const response = await firstValueFrom(
         this.httpService.post(
           `${this.config.apiUrl}/api/v1/payments`,
           requestData,
           {
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
+            maxRedirects: 0,
+            validateStatus: (status) => status < 400,
           },
         ),
       );
 
-      this.logger.debug(
-        `[PAYX] Response received: ${JSON.stringify(response.data)}`,
-      );
+      this.logger.log(`[PAYX] Response status: ${response.status}, Location: ${response.headers['location'] || 'none'}`);
 
-      // Verify response hash
+      // PAYX hosted_form returns 302 redirect to payment page
+      if (response.status === 302 && response.headers['location']) {
+        const location = response.headers['location'];
+        const paymentUrl = location.startsWith('http') ? location : `${baseUrl}${location}`;
+
+        // Extract payment id from redirect URL (e.g. /payment/qr?is_root=true&id=xxx)
+        const idMatch = location.match(/[?&]id=([a-z0-9]+)/);
+        const paymentId = idMatch?.[1];
+
+        this.logger.log(`[PAYX] Redirect to: ${paymentUrl}, paymentId: ${paymentId}`);
+
+        return {
+          paymentUrl,
+          paymentId,
+          displayMode: PaymentDisplayMode.HOSTED_FORM,
+          amount: params.amount,
+          expireDate: new Date(Date.now() + 60 * 60 * 1000),
+        };
+      }
+
+      // JSON response — verify hash
       const responseHash = response.headers['x-secure-hash'];
       const isValid = this.verifyResponseHash(response.data, responseHash);
 
@@ -103,7 +122,10 @@ export class PayxProvider implements IPaymentProvider {
         throw new Error('Invalid response signature from PAYX');
       }
 
-      if (displayMode === PaymentDisplayMode.HOSTED_FORM) {
+      if (
+        displayMode === PaymentDisplayMode.HOSTED_FORM &&
+        response.data.data?.paymentUrl
+      ) {
         // Return redirect URL
         return {
           paymentUrl: response.data.data.paymentUrl,
@@ -176,7 +198,7 @@ export class PayxProvider implements IPaymentProvider {
     const requestData = {
       merchantCode: this.config.merchantCode,
       orderId: params.orderId,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
       secureHash: '',
     };
 
@@ -226,6 +248,7 @@ export class PayxProvider implements IPaymentProvider {
   // Private helper methods
   private generateRequestHash(data: any): string {
     const hashData = `${data.merchantCode}|${data.amount}|${data.orderId}|${data.description}|${data.returnUrl}|${data.callbackUrl}|${data.ipAddr}|${data.createdDate}|${data.expireDate}`;
+    this.logger.debug(`Generating request hash with data: ${hashData}`);
     return crypto
       .createHmac('sha512', this.config.secretKey)
       .update(hashData)
@@ -277,6 +300,6 @@ export class PayxProvider implements IPaymentProvider {
   private calculateExpireDate(): string {
     const now = new Date();
     const expire = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour
-    return expire.toISOString();
+    return expire.toISOString().replace(/\.\d{3}Z$/, 'Z');
   }
 }

@@ -15,6 +15,7 @@ import { MatchScore } from './entities/match-score.entity';
 import { EventParticipant } from './entities/event-participant.entity';
 import { Stage } from './entities/stage.entity';
 import { EventOrder } from './entities/event-order.entity';
+import { Athlete } from '../athlete/entities/athlete.entity';
 
 import { EventController } from './event.controller';
 import { PublicEventController } from './public-event.controller';
@@ -24,6 +25,7 @@ import { ParticipantController } from './participant.controller';
 import { StageController } from './stage.controller';
 import { EventOrderController } from './event-order.controller';
 import { PublicEventOrderController } from './public-event-order.controller';
+import { AdminOrderController } from './admin-order.controller';
 
 import { EventService } from './event.service';
 import { MatchService } from './match.service';
@@ -53,6 +55,7 @@ import { FlexStrategy } from './strategies/flex.strategy';
       EventParticipant,
       Stage,
       EventOrder,
+      Athlete,
     ]),
   ],
   controllers: [
@@ -64,6 +67,7 @@ import { FlexStrategy } from './strategies/flex.strategy';
     StageController,
     EventOrderController,
     PublicEventOrderController,
+    AdminOrderController,
   ],
   providers: [
     EventService,
