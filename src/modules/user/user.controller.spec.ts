@@ -7,6 +7,7 @@ import { Role } from '../../common/enums/role.enum';
 import { UsersController } from './user.controller';
 import { User } from './user.entity';
 import { UserService } from './user.service';
+import { ParticipantService } from '../event/participant.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -51,6 +52,10 @@ describe('UsersController', () => {
     findAllPaginated: vi.fn(),
   };
 
+  const mockParticipantService = {
+    findByUser: vi.fn().mockResolvedValue([]),
+  };
+
   beforeEach(async () => {
     vi.clearAllMocks();
 
@@ -60,6 +65,10 @@ describe('UsersController', () => {
         {
           provide: UserService,
           useValue: mockUserService,
+        },
+        {
+          provide: ParticipantService,
+          useValue: mockParticipantService,
         },
       ],
     }).compile();
